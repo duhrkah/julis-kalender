@@ -48,11 +48,11 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
             ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
           ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
-            export DOMAIN=kalender.jlssrv.de && \
             export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
+            docker compose -f docker-compose.proxy.yml up -d --build && \
             docker compose -f docker-compose.yml pull --quiet && \
             docker compose -f docker-compose.yml up -d --build && \
-            docker compose -f docker-compose.yml exec -T nginx nginx -s reload 2>/dev/null || true"
+            docker compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true"
 
   deploy-test:
     name: Deploy Test (kalender-test.jlssrv.de)
@@ -69,7 +69,7 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender' }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
@@ -86,8 +86,8 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
             ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
           ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
-            export DOMAIN=kalender-test.jlssrv.de && \
             export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
+            docker compose -f docker-compose.proxy.yml up -d --build && \
             docker compose -f docker-compose.test.yml pull --quiet && \
             docker compose -f docker-compose.test.yml up -d --build && \
-            docker compose -f docker-compose.test.yml exec -T nginx nginx -s reload 2>/dev/null || true"
+            docker compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true"

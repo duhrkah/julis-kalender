@@ -1,5 +1,5 @@
 # Test-Umgebung: kalender-test.jlssrv.de
-# Nginx Reverse Proxy mit HTTPS (Let's Encrypt)
+# Läuft parallel mit Production. Shared Nginx (docker-compose.proxy.yml) routet beide Domains.
 
 services:
   backend:
@@ -26,7 +26,7 @@ services:
     volumes:
       - test-data:/app/data
     networks:
-      - kalender-test-network
+      - kalender-shared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -50,45 +50,11 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - kalender-test-network
-
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: kalender-test-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN:-kalender-test.jlssrv.de}
-      - CERTBOT_EMAIL=${CERTBOT_EMAIL:-admin@jlssrv.de}
-    volumes:
-      - certbot-test-data:/var/www/certbot
-      - certbot-test-etc:/etc/letsencrypt
-    depends_on:
-      frontend:
-        condition: service_started
-    networks:
-      - kalender-test-network
-
-  certbot:
-    image: certbot/certbot
-    container_name: kalender-test-certbot
-    volumes:
-      - certbot-test-data:/var/www/certbot
-      - certbot-test-etc:/etc/letsencrypt
-    networks:
-      - kalender-test-network
-    profiles:
-      - renew
+      - kalender-shared
 
 networks:
-  kalender-test-network:
-    driver: bridge
+  kalender-shared:
+    external: true
 
 volumes:
   test-data:
-  certbot-test-data:
-  certbot-test-etc:

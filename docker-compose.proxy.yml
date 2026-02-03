@@ -1,0 +1,41 @@
+# Gemeinsamer Nginx Reverse Proxy für Production + Test
+# Ermöglicht parallelen Betrieb beider Umgebungen auf Port 80/443
+# Verwendung: docker compose -f docker-compose.proxy.yml up -d
+
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.multi
+    container_name: kalender-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL:-admin@jlssrv.de}
+    volumes:
+      - certbot-data:/var/www/certbot
+      - certbot-etc:/etc/letsencrypt
+    networks:
+      - kalender-shared
+
+  certbot:
+    image: certbot/certbot
+    container_name: kalender-certbot
+    volumes:
+      - certbot-data:/var/www/certbot
+      - certbot-etc:/etc/letsencrypt
+    networks:
+      - kalender-shared
+    profiles:
+      - renew
+
+networks:
+  kalender-shared:
+    name: kalender-shared
+    driver: bridge
+
+volumes:
+  certbot-data:
+  certbot-etc:
