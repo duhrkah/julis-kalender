@@ -40,7 +40,7 @@ jobs:
 
   deploy-test:
     name: Deploy Test (kalender-test.jlssrv.de)
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production')
     runs-on: ubuntu-latest
     environment: test
     steps:
@@ -52,8 +52,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
-            git fetch origin develop
-            git reset --hard origin/develop
+            git fetch origin main
+            git reset --hard origin/main
             export DOMAIN=kalender-test.jlssrv.de
             export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
             docker compose -f docker-compose.test.yml pull --quiet
