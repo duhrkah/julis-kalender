@@ -5,15 +5,11 @@
  */
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTheme } from '@/components/ui/ThemeProvider';
 
-export default function EmbedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function EmbedLayoutInner({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const { setTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,5 +37,13 @@ export default function EmbedLayout({
     <div ref={containerRef} className="min-h-0 bg-background">
       {children}
     </div>
+  );
+}
+
+export default function EmbedLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="min-h-0 bg-background">{children}</div>}>
+      <EmbedLayoutInner>{children}</EmbedLayoutInner>
+    </Suspense>
   );
 }
