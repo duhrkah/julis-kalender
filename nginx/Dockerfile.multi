@@ -4,6 +4,7 @@ RUN apk add --no-cache certbot
 
 COPY nginx-multi-http.conf /etc/nginx/nginx-multi-http.conf
 COPY nginx-multi-https.conf.template /etc/nginx/nginx-multi-https.conf.template
+COPY nginx-multi-https-prod-only.conf.template /etc/nginx/nginx-multi-https-prod-only.conf.template
 COPY entrypoint-multi.sh /entrypoint-multi.sh
 
 RUN chmod +x /entrypoint-multi.sh && \

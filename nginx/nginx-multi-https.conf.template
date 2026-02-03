@@ -36,7 +36,6 @@ http {
     }
 
     # HTTPS - Production (kalender.jlssrv.de)
-    # Gemeinsames Zertifikat für beide Domains (SAN)
     server {
         listen 443 ssl http2;
         server_name kalender.jlssrv.de;
@@ -76,14 +75,13 @@ http {
         }
     }
 
-    # HTTPS - Test (kalender-test.jlssrv.de)
-    # Nutzt dasselbe Zertifikat (SAN enthält beide Domains)
+    # HTTPS - Test (kalender-test.jlssrv.de) – eigenes Zertifikat
     server {
         listen 443 ssl http2;
         server_name kalender-test.jlssrv.de;
 
-        ssl_certificate /etc/letsencrypt/live/kalender.jlssrv.de/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/kalender.jlssrv.de/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/kalender-test.jlssrv.de/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/kalender-test.jlssrv.de/privkey.pem;
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
         ssl_prefer_server_ciphers off;
