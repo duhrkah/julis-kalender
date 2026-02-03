@@ -20,7 +20,7 @@ def test_create_event(client, auth_headers):
         },
         headers=auth_headers,
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["title"] == "Test Event"
     assert data["status"] == "pending"
@@ -48,7 +48,7 @@ def test_create_event_minimal_fields(client, auth_headers):
         },
         headers=auth_headers,
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["title"] == "Minimal Event"
 
