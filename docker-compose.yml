@@ -1,4 +1,5 @@
 # Produktion: kalender.jlssrv.de
+name: kalender-prod
 
 services:
   backend:

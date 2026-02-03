@@ -1,3 +1,5 @@
+name: kalender-proxy
+
 services:
   nginx:
     build:
