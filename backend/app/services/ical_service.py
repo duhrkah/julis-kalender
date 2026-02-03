@@ -1,7 +1,7 @@
 """iCal/ICS export service"""
 from typing import List
 from datetime import datetime, time as dt_time
-from icalendar import Calendar, Event as ICalEvent
+from icalendar import Calendar, Event as ICalEvent, vCalAddress, vText
 from app.models.event import Event
 
 
@@ -37,7 +37,7 @@ def generate_ical(events: List[Event]) -> str:
             location = event.location
             if event.location_url:
                 location += f'\n{event.location_url}'
-            ical_event.add('location', location)
+            ical_event.add('location', vText(location))
 
         start_datetime = _create_datetime(event.start_date, event.start_time)
         ical_event.add('dtstart', start_datetime)
@@ -63,7 +63,14 @@ def generate_ical(events: List[Event]) -> str:
         ical_event.add('status', 'CONFIRMED')
 
         if event.submitter_email:
-            ical_event.add('organizer', f'mailto:{event.submitter_email}')
+            cn = event.organizer or event.submitter_name or "Unbekannt"
+            organizer = vCalAddress(f'mailto:{event.submitter_email}')
+            organizer.params['cn'] = vText(cn)
+            ical_event.add('organizer', organizer, encode=0)
+        elif event.organizer:
+            organizer = vCalAddress('mailto:noreply@kalender.local')
+            organizer.params['cn'] = vText(event.organizer)
+            ical_event.add('organizer', organizer, encode=0)
 
         cal.add_component(ical_event)
 

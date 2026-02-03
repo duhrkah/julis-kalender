@@ -296,12 +296,12 @@ async def export_events_csv(
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "id", "title", "description", "start_date", "start_time", "end_date", "end_time",
+        "id", "title", "organizer", "description", "start_date", "start_time", "end_date", "end_time",
         "location", "location_url", "status", "category", "submitter_name", "submitter_email"
     ])
     for e in events:
         writer.writerow([
-            e.id, e.title, (e.description or "")[:500], e.start_date, e.start_time,
+            e.id, e.title, e.organizer or "", (e.description or "")[:500], e.start_date, e.start_time,
             e.end_date, e.end_time, e.location, e.location_url, e.status,
             e.category.name if e.category else "",
             e.submitter_name, e.submitter_email

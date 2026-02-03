@@ -10,12 +10,21 @@ import { z } from 'zod';
 import { EventCreate } from '@/types/event';
 import { Category } from '@/types/category';
 import * as categoryApi from '@/lib/api/categories';
+import { useAuth } from '@/lib/hooks/useAuth';
+
+const ORGANIZER_LANDESVERBAND = 'Junge Liberale Schleswig-Holstein';
+const CATEGORY_LANDESVERBAND = 'Landesverband';
+const CATEGORY_KREISVERBAENDE = 'Kreisverbände';
 
 const eventSchema = z.object({
   title: z
     .string()
     .min(1, 'Titel ist erforderlich')
     .max(255, 'Titel darf maximal 255 Zeichen lang sein'),
+  organizer: z
+    .string()
+    .min(1, 'Veranstalter ist erforderlich')
+    .max(255, 'Veranstalter darf maximal 255 Zeichen lang sein'),
   description: z.string().optional(),
   start_date: z.string().min(1, 'Startdatum ist erforderlich'),
   start_time: z.string().optional(),
@@ -65,8 +74,11 @@ export default function EventForm({
   onCancel,
   submitLabel = 'Event einreichen',
 }: EventFormProps) {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const currentUserName = user?.full_name || user?.username || '';
 
   const {
     register,
@@ -78,6 +90,7 @@ export default function EventForm({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: initialData?.title || '',
+      organizer: initialData?.organizer || '',
       description: initialData?.description || '',
       start_date: initialData?.start_date || '',
       start_time: initialData?.start_time || '',
@@ -93,10 +106,21 @@ export default function EventForm({
   });
 
   const startDate = watch('start_date');
+  const categoryId = watch('category_id');
 
   useEffect(() => {
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    if (!categoryId || categories.length === 0) return;
+    const category = categories.find((c) => c.id === categoryId);
+    if (category?.name === CATEGORY_LANDESVERBAND) {
+      setValue('organizer', ORGANIZER_LANDESVERBAND);
+    } else if (category?.name === CATEGORY_KREISVERBAENDE) {
+      setValue('organizer', initialData?.submitter_name || currentUserName);
+    }
+  }, [categoryId, categories, currentUserName, setValue, initialData?.submitter_name]);
 
   const loadCategories = async () => {
     try {
@@ -113,6 +137,7 @@ export default function EventForm({
     try {
       const cleanData: EventCreate = {
         title: data.title,
+        organizer: data.organizer,
         start_date: data.start_date,
         is_public: data.is_public,
         description: data.description || undefined,
@@ -139,6 +164,11 @@ export default function EventForm({
         : 'border-border focus:ring-primary'
     }`;
 
+  const selectedCategory = categoryId ? categories.find((c) => c.id === categoryId) : null;
+  const organizerAutoFilled =
+    selectedCategory?.name === CATEGORY_LANDESVERBAND ||
+    selectedCategory?.name === CATEGORY_KREISVERBAENDE;
+
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       {submitError && (
@@ -160,6 +190,46 @@ export default function EventForm({
         />
         {errors.title && (
           <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>
+        )}
+      </div>
+
+      {/* Category */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Kategorie
+        </label>
+        <select
+          {...register('category_id', {
+            setValueAs: (v) => (v === '' ? undefined : Number(v)),
+          })}
+          className={inputClassName(!!errors.category_id)}
+        >
+          <option value="">Keine Kategorie</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        {errors.category_id && (
+          <p className="mt-1 text-sm text-red-500">{errors.category_id.message}</p>
+        )}
+      </div>
+
+      {/* Organizer */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Veranstalter <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          {...register('organizer')}
+          className={`${inputClassName(!!errors.organizer)} ${organizerAutoFilled ? 'bg-muted cursor-not-allowed' : ''}`}
+          placeholder="z.B. JuLis Bundesverband"
+          readOnly={organizerAutoFilled}
+        />
+        {errors.organizer && (
+          <p className="mt-1 text-sm text-red-500">{errors.organizer.message}</p>
         )}
       </div>
 
@@ -270,29 +340,6 @@ export default function EventForm({
             <p className="mt-1 text-sm text-red-500">{errors.location_url.message}</p>
           )}
         </div>
-      </div>
-
-      {/* Category */}
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Kategorie
-        </label>
-        <select
-          {...register('category_id', {
-            setValueAs: (v) => (v === '' ? undefined : Number(v)),
-          })}
-          className={inputClassName(!!errors.category_id)}
-        >
-          <option value="">Keine Kategorie</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-        {errors.category_id && (
-          <p className="mt-1 text-sm text-red-500">{errors.category_id.message}</p>
-        )}
       </div>
 
       {/* Submitter Info */}

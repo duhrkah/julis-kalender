@@ -55,6 +55,7 @@
     "startTime": "Startzeit",
     "endDate": "Enddatum",
     "endTime": "Endzeit",
+    "organizer": "Veranstalter",
     "location": "Ort",
     "locationUrl": "Ort-URL",
     "category": "Kategorie",
@@ -105,7 +106,7 @@
     "forgotPassword": "Passwort vergessen?"
   },
   "admin": {
-    "title": "Admin-Panel",
+    "title": "LaVo-Bereich",
     "pendingEvents": "Ausstehende Events",
     "allEvents": "Alle Events",
     "categories": "Kategorien",

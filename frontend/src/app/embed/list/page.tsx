@@ -91,6 +91,9 @@ export default function EmbedListPage() {
                 <h3 className="font-semibold mb-1 truncate">{event.title}</h3>
 
                 <div className="text-sm text-muted-foreground space-y-1">
+                  {event.organizer && (
+                    <div className="font-medium">{event.organizer}</div>
+                  )}
                   <div>{formatDate(event.start_date, event.start_time)}</div>
 
                   {event.location && (

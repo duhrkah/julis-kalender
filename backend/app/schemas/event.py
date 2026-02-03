@@ -15,6 +15,7 @@ class EventBase(BaseModel):
     end_time: Optional[time] = None
     location: Optional[str] = Field(None, max_length=500)
     location_url: Optional[str] = Field(None, max_length=500)
+    organizer: str = Field(..., min_length=1, max_length=255)
     category_id: Optional[int] = None
     is_public: bool = True
 
@@ -29,6 +30,7 @@ class EventCreate(EventBase):
             "examples": [
                 {
                     "title": "JuLis Bundeskongress 2026",
+                    "organizer": "JuLis Bundesverband",
                     "description": "Jährlicher Bundeskongress der Jungen Liberalen",
                     "start_date": "2026-05-15",
                     "start_time": "10:00",
@@ -56,6 +58,7 @@ class EventUpdate(BaseModel):
     end_time: Optional[time] = None
     location: Optional[str] = Field(None, max_length=500)
     location_url: Optional[str] = Field(None, max_length=500)
+    organizer: Optional[str] = Field(None, min_length=1, max_length=255)
     category_id: Optional[int] = None
     is_public: Optional[bool] = None
 
@@ -64,6 +67,7 @@ class EventResponse(EventBase):
     """Schema for event response"""
     id: int
     status: str
+    organizer: Optional[str] = None
     submitter_id: int
     submitter_name: Optional[str]
     submitter_email: Optional[str]
@@ -90,6 +94,7 @@ class EventPublic(BaseModel):
     end_time: Optional[time]
     location: Optional[str]
     location_url: Optional[str]
+    organizer: Optional[str] = None
     category_id: Optional[int]
     category: Optional[CategoryPublic] = None
 

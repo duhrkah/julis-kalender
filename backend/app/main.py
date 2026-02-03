@@ -27,13 +27,15 @@ if RATE_LIMIT_ENABLED:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
+cors_kwargs: dict = {
+    "allow_origins": settings.cors_origins_list,
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["*"],
+}
+if settings.cors_allow_origin_regex:
+    cors_kwargs["allow_origin_regex"] = settings.cors_allow_origin_regex
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 
 DEFAULT_JWT_SECRET = "dev-secret-key-change-in-production"
@@ -44,6 +46,8 @@ async def startup_event():
     """Run on application startup"""
     logger.info(f"Starting Calendar API in {settings.ENVIRONMENT} mode")
     logger.info(f"CORS origins: {settings.cors_origins_list}")
+    if settings.cors_allow_origin_regex:
+        logger.info("CORS: local network origins (192.168.x.x, 10.x.x.x) allowed for dev")
     if not RATE_LIMIT_ENABLED:
         logger.warning("Rate limiting disabled (slowapi not installed). Install slowapi for login protection.")
 

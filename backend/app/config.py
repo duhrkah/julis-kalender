@@ -34,7 +34,14 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string"""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def cors_allow_origin_regex(self) -> Optional[str]:
+        """In development: allow local network origins (192.168.x.x, 10.x.x.x) for Handy-Zugriff"""
+        if self.ENVIRONMENT != "development":
+            return None
+        return r"https?://(localhost|127\.0\.0\.1|frontend|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?"
 
     @property
     def email_configured(self) -> bool:

@@ -10,6 +10,7 @@ def test_create_event(client, auth_headers):
         "/api/v1/events",
         json={
             "title": "Test Event",
+            "organizer": "Test Organizer",
             "description": "A test event description",
             "start_date": "2025-03-15",
             "start_time": "14:00",
@@ -32,6 +33,7 @@ def test_create_event_unauthenticated(client):
         "/api/v1/events",
         json={
             "title": "Test Event",
+            "organizer": "Test Organizer",
             "start_date": "2025-03-15",
         },
     )
@@ -44,6 +46,7 @@ def test_create_event_minimal_fields(client, auth_headers):
         "/api/v1/events",
         json={
             "title": "Minimal Event",
+            "organizer": "Minimal Organizer",
             "start_date": "2025-04-01",
         },
         headers=auth_headers,
@@ -57,7 +60,7 @@ def test_get_my_events(client, auth_headers):
     """Test getting user's own events"""
     client.post(
         "/api/v1/events",
-        json={"title": "My Event", "start_date": "2025-03-20"},
+        json={"title": "My Event", "organizer": "My Org", "start_date": "2025-03-20"},
         headers=auth_headers,
     )
 
@@ -97,7 +100,7 @@ def test_approve_event_as_admin(client, auth_headers, admin_headers, db):
     """Test admin can approve an event"""
     create_response = client.post(
         "/api/v1/events",
-        json={"title": "Event to Approve", "start_date": "2025-05-01"},
+        json={"title": "Event to Approve", "organizer": "Test Org", "start_date": "2025-05-01"},
         headers=auth_headers,
     )
     event_id = create_response.json()["id"]
@@ -115,7 +118,7 @@ def test_approve_event_as_user_fails(client, auth_headers, db):
     """Test regular user cannot approve events"""
     create_response = client.post(
         "/api/v1/events",
-        json={"title": "Event to Approve", "start_date": "2025-05-01"},
+        json={"title": "Event to Approve", "organizer": "Test Org", "start_date": "2025-05-01"},
         headers=auth_headers,
     )
     event_id = create_response.json()["id"]
@@ -131,7 +134,7 @@ def test_reject_event_as_admin(client, auth_headers, admin_headers, db):
     """Test admin can reject an event with reason"""
     create_response = client.post(
         "/api/v1/events",
-        json={"title": "Event to Reject", "start_date": "2025-05-01"},
+        json={"title": "Event to Reject", "organizer": "Test Org", "start_date": "2025-05-01"},
         headers=auth_headers,
     )
     event_id = create_response.json()["id"]
@@ -151,7 +154,7 @@ def test_update_own_event(client, auth_headers):
     """Test user can update their own event"""
     create_response = client.post(
         "/api/v1/events",
-        json={"title": "Original Title", "start_date": "2025-06-01"},
+        json={"title": "Original Title", "organizer": "Test Org", "start_date": "2025-06-01"},
         headers=auth_headers,
     )
     event_id = create_response.json()["id"]
@@ -169,7 +172,7 @@ def test_delete_own_event(client, auth_headers):
     """Test user can delete their own event"""
     create_response = client.post(
         "/api/v1/events",
-        json={"title": "Event to Delete", "start_date": "2025-06-15"},
+        json={"title": "Event to Delete", "organizer": "Test Org", "start_date": "2025-06-15"},
         headers=auth_headers,
     )
     event_id = create_response.json()["id"]

@@ -135,6 +135,7 @@ export default function MyEventsPage() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{event.title}</h3>
                   <p className="text-sm text-muted-foreground mt-0.5">
+                    {event.organizer && <span className="font-medium">{event.organizer} • </span>}
                     {formatDate(event.start_date, event.start_time)}
                     {event.category && (
                       <span

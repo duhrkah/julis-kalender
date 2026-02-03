@@ -451,6 +451,11 @@ export default function AdminEventsPage() {
                         <span className="font-medium">Ort:</span> {event.location}
                       </div>
                     )}
+                    {event.organizer && (
+                      <div>
+                        <span className="font-medium">Veranstalter:</span> {event.organizer}
+                      </div>
+                    )}
                     <div>
                       <span className="font-medium">Eingereicht von:</span>{' '}
                       {event.submitter_name || 'Unbekannt'}

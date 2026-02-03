@@ -55,6 +55,7 @@
     "startTime": "Start Time",
     "endDate": "End Date",
     "endTime": "End Time",
+    "organizer": "Organizer",
     "location": "Location",
     "locationUrl": "Location URL",
     "category": "Category",

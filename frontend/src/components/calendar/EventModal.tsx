@@ -50,11 +50,19 @@ function buildIcalContent(event: Event): string {
     `DTEND:${end}`,
     `SUMMARY:${event.title.replace(/\n/g, ' ')}`,
   ];
+  if (event.organizer) {
+    const cn = event.organizer.replace(/["\\]/g, '\\$&');
+    lines.push(`ORGANIZER;CN="${cn}":mailto:noreply@kalender.local`);
+  }
   if (event.description) {
     lines.push(`DESCRIPTION:${event.description.replace(/\n/g, '\\n')}`);
   }
   if (event.location) {
-    lines.push(`LOCATION:${event.location}`);
+    // iCal TEXT: Komma, Semikolon, Backslash und Zeilenumbruch escapen (RFC 5545)
+    let loc = event.location;
+    if (event.location_url) loc += '\n' + event.location_url;
+    const escaped = loc.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    lines.push(`LOCATION:${escaped}`);
   }
   lines.push('END:VEVENT', 'END:VCALENDAR');
   return lines.join('\r\n');
@@ -135,11 +143,16 @@ export default function EventModal({ event, onClose }: EventModalProps) {
         )}
 
         <div className="p-6">
-          {/* Title and Category */}
+          {/* Title, Organizer and Category */}
           <div className="mb-4">
             <h2 id="event-modal-title" className="text-2xl font-bold mb-2">
               {event.title}
             </h2>
+            {event.organizer && (
+              <p className="text-sm text-muted-foreground mb-2">
+                {t('events.organizer')}: {event.organizer}
+              </p>
+            )}
             {event.category && (
               <span
                 className="inline-flex px-3 py-1 text-sm rounded-full"

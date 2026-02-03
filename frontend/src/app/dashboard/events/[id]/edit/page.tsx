@@ -41,6 +41,7 @@ export default function EditEventPage() {
       }
       setInitialData({
         title: event.title,
+        organizer: event.organizer || '',
         description: event.description || '',
         start_date: event.start_date,
         start_time: event.start_time || '',

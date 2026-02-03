@@ -14,6 +14,7 @@ export interface Event {
   end_time?: string | null;
   location?: string | null;
   location_url?: string | null;
+  organizer?: string | null;
   status: EventStatus;
   category_id?: number | null;
   category?: {
@@ -41,6 +42,7 @@ export interface EventCreate {
   end_time?: string;
   location?: string;
   location_url?: string;
+  organizer: string;
   category_id?: number;
   submitter_name?: string;
   submitter_email?: string;
@@ -56,6 +58,7 @@ export interface EventUpdate {
   end_time?: string;
   location?: string;
   location_url?: string;
+  organizer?: string;
   category_id?: number;
   is_public?: boolean;
 }

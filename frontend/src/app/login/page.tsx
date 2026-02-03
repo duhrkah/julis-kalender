@@ -33,7 +33,7 @@ export default function LoginPage() {
 
         {/* Info Text */}
         <p className="text-center text-xs text-muted-foreground">
-          Event-Management-System mit Admin-Freigabe-Workflow
+          &copy; {new Date().getFullYear()} <a href="https://www.lucakohls.de" target="_blank" rel="noopener noreferrer">Luca Stephan Kohls</a>
         </p>
       </div>
     </main>

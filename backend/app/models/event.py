@@ -19,6 +19,7 @@ class Event(Base):
     end_time = Column(Time, nullable=True)
     location = Column(String(500), nullable=True)
     location_url = Column(String(500), nullable=True)
+    organizer = Column(String(255), nullable=True)
 
     status = Column(String(20), nullable=False, default="pending", index=True)
     rejection_reason = Column(Text, nullable=True)

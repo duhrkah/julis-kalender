@@ -2,6 +2,9 @@
 const nextConfig = {
   output: 'standalone',
 
+  // Erlaubt Zugriff vom Handy über lokale IP (z.B. http://192.168.178.24:3000)
+  allowedDevOrigins: ['http://192.168.178.24:3000', 'http://localhost:3000'],
+
   async headers() {
     return [
       {

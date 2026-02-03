@@ -27,6 +27,7 @@ COPY ./scripts ./scripts
 
 # Make sure scripts are executable
 RUN chmod +x /app/scripts/*.py 2>/dev/null || true
+RUN chmod +x /app/scripts/entrypoint.sh
 
 # Update PATH
 ENV PATH=/root/.local/bin:$PATH
@@ -36,5 +37,6 @@ RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-# Run the application
+# Entrypoint: Migrationen ausführen, dann Anwendung starten
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

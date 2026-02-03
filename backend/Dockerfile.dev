@@ -8,10 +8,17 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy alembic and scripts for migrations
+COPY alembic ./alembic
+COPY alembic.ini .
+COPY scripts ./scripts
+RUN chmod +x /app/scripts/entrypoint.sh 2>/dev/null || true
+
 # Create data directory
 RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-# Run with auto-reload
+# Entrypoint: Migrationen, dann Anwendung
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
