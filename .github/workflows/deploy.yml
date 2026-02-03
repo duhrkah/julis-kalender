@@ -3,13 +3,22 @@ name: Deploy
 on:
   push:
     branches:
-      - main
       - develop
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deploy-Ziel'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - test
 
 jobs:
   deploy-prod:
     name: Deploy Produktion (kalender.jlssrv.de)
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -31,7 +40,7 @@ jobs:
 
   deploy-test:
     name: Deploy Test (kalender-test.jlssrv.de)
-    if: github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
     runs-on: ubuntu-latest
     environment: test
     steps:
