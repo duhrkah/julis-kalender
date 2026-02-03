@@ -37,14 +37,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://kalender-test.jlssrv.de/api/v1}
-        - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://kalender-test.jlssrv.de}
+        - NEXT_PUBLIC_API_URL=https://kalender-test.jlssrv.de/api/v1
+        - NEXT_PUBLIC_APP_URL=https://kalender-test.jlssrv.de
         - NEXT_PUBLIC_APP_ENV=test
     container_name: kalender-test-frontend
     restart: unless-stopped
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://kalender-test.jlssrv.de/api/v1}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://kalender-test.jlssrv.de}
     depends_on:
       backend:
         condition: service_healthy
