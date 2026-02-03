@@ -21,5 +21,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender' }}
-            docker compose -f docker-compose.proxy.yml --profile renew run --rm certbot renew --webroot -w /var/www/certbot --quiet 2>/dev/null || true
-            docker compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true
+            docker-compose -f docker-compose.proxy.yml --profile renew run --rm certbot renew --webroot -w /var/www/certbot --quiet 2>/dev/null || true
+            docker-compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true
