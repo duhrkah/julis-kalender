@@ -1,0 +1,28 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/

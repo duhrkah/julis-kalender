@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender Embedding Beispiel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .section p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .iframe-container {
+            width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .calendar-iframe {
+            width: 100%;
+            height: 700px;
+            border: none;
+            display: block;
+        }
+
+        .list-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            display: block;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .note strong {
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Kalender Embedding Beispiel</h1>
+        <p class="description">
+            Diese Seite zeigt, wie Sie den Event-Kalender auf Ihrer Website einbetten können.
+            Es gibt zwei Ansichten: Kalenderansicht (Monatsansicht) und Listenansicht (chronologisch).
+        </p>
+
+        <!-- Calendar View Section -->
+        <div class="section">
+            <h2>Kalenderansicht</h2>
+            <p>
+                Die Kalenderansicht zeigt alle Events in einer monatlichen Kalenderübersicht.
+                Benutzer können zwischen Monaten navigieren und auf Events klicken, um Details zu sehen.
+            </p>
+
+            <div class="note">
+                <strong>Hinweis:</strong> Ersetzen Sie <code>http://localhost:3000</code> mit Ihrer tatsächlichen Domain.
+            </div>
+
+            <div class="code-block">
+                <code>&lt;iframe<br>
+    &nbsp;&nbsp;src="http://localhost:3000/embed/calendar"<br>
+    &nbsp;&nbsp;width="100%"<br>
+    &nbsp;&nbsp;height="700"<br>
+    &nbsp;&nbsp;frameborder="0"<br>
+    &nbsp;&nbsp;title="Event Kalender"<br>
+&gt;&lt;/iframe&gt;</code>
+            </div>
+
+            <div class="iframe-container">
+                <iframe
+                    class="calendar-iframe"
+                    src="http://localhost:3000/embed/calendar"
+                    title="Event Kalender"
+                ></iframe>
+            </div>
+        </div>
+
+        <!-- List View Section -->
+        <div class="section">
+            <h2>Listenansicht</h2>
+            <p>
+                Die Listenansicht zeigt alle Events in chronologischer Reihenfolge.
+                Diese Ansicht ist kompakter und eignet sich gut für Seitenleisten oder kleinere Bereiche.
+            </p>
+
+            <div class="code-block">
+                <code>&lt;iframe<br>
+    &nbsp;&nbsp;src="http://localhost:3000/embed/list"<br>
+    &nbsp;&nbsp;width="100%"<br>
+    &nbsp;&nbsp;height="600"<br>
+    &nbsp;&nbsp;frameborder="0"<br>
+    &nbsp;&nbsp;title="Event Liste"<br>
+&gt;&lt;/iframe&gt;</code>
+            </div>
+
+            <div class="iframe-container">
+                <iframe
+                    class="list-iframe"
+                    src="http://localhost:3000/embed/list"
+                    title="Event Liste"
+                ></iframe>
+            </div>
+        </div>
+
+        <!-- Integration Guide -->
+        <div class="section">
+            <h2>Integrations-Anleitung</h2>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Schritt 1: Code kopieren</h3>
+            <p>Kopieren Sie einen der oben gezeigten iframe-Codes.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Schritt 2: URL anpassen</h3>
+            <p>Ersetzen Sie <code>http://localhost:3000</code> mit Ihrer tatsächlichen Domain:</p>
+            <div class="code-block">
+                <code>src="https://ihre-domain.de/embed/calendar"</code>
+            </div>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Schritt 3: In Website einfügen</h3>
+            <p>Fügen Sie den iframe-Code in Ihre HTML-Seite ein, z.B. in Typo3, WordPress oder eine statische HTML-Seite.</p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Anpassungsmöglichkeiten</h3>
+            <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                <li><strong>width:</strong> Passen Sie die Breite an (z.B. "100%", "800px")</li>
+                <li><strong>height:</strong> Passen Sie die Höhe an (z.B. "600", "800")</li>
+                <li><strong>scrolling:</strong> Aktivieren Sie Scrolling mit <code>scrolling="yes"</code></li>
+            </ul>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section">
+            <h2>Features</h2>
+            <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                <li>✅ Responsive Design - funktioniert auf allen Geräten</li>
+                <li>✅ Automatische Updates - neue Events erscheinen automatisch</li>
+                <li>✅ Kategorie-Farbcodierung - Events sind nach Kategorien farblich markiert</li>
+                <li>✅ Event-Details - Klicken auf Events zeigt Details</li>
+                <li>✅ Keine JavaScript-Kenntnisse erforderlich</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

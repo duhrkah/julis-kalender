@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    /* JuLis Magenta as primary */
+    --primary: 329 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    /* JuLis Soft Yellow as secondary */
+    --secondary: 53 100% 85%;
+    --secondary-foreground: 0 0% 10%;
+    /* JuLis Soft Magenta as muted */
+    --muted: 333 73% 83%;
+    --muted-foreground: 0 0% 35%;
+    /* JuLis Cyan as accent */
+    --accent: 199 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 333 30% 90%;
+    --input: 333 30% 90%;
+    --ring: 329 100% 45%;
+    --radius: 0.75rem;
+
+    /* JuLis Brand Colors */
+    --julis-magenta: 329 100% 45%;
+    --julis-yellow: 56 100% 50%;
+    --julis-cyan: 199 100% 45%;
+    --julis-soft-magenta: 333 73% 83%;
+    --julis-soft-yellow: 53 100% 85%;
+    --julis-soft-cyan: 202 85% 80%;
+    --julis-soft-purple: 251 33% 70%;
+    --julis-soft-orange: 22 67% 76%;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    /* JuLis Magenta as primary */
+    --primary: 329 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    /* Darker yellow variant for dark mode */
+    --secondary: 56 70% 25%;
+    --secondary-foreground: 0 0% 98%;
+    /* Darker muted for dark mode */
+    --muted: 329 30% 20%;
+    --muted-foreground: 0 0% 65%;
+    /* JuLis Cyan as accent */
+    --accent: 199 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 329 20% 20%;
+    --input: 329 20% 20%;
+    --ring: 329 100% 50%;
+
+    /* JuLis Brand Colors (same in dark mode) */
+    --julis-magenta: 329 100% 45%;
+    --julis-yellow: 56 100% 50%;
+    --julis-cyan: 199 100% 45%;
+    --julis-soft-magenta: 333 73% 83%;
+    --julis-soft-yellow: 53 100% 85%;
+    --julis-soft-cyan: 202 85% 80%;
+    --julis-soft-purple: 251 33% 70%;
+    --julis-soft-orange: 22 67% 76%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

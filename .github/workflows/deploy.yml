@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy-prod:
+    name: Deploy Produktion (kalender.jlssrv.de)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH || '~/kalender' }}
+            git fetch origin main
+            git reset --hard origin/main
+            export DOMAIN=kalender.jlssrv.de
+            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
+            docker compose -f docker-compose.yml pull --quiet
+            docker compose -f docker-compose.yml up -d --build
+            docker compose -f docker-compose.yml exec -T nginx nginx -s reload 2>/dev/null || true
+
+  deploy-test:
+    name: Deploy Test (kalender-test.jlssrv.de)
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
+            git fetch origin develop
+            git reset --hard origin/develop
+            export DOMAIN=kalender-test.jlssrv.de
+            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
+            docker compose -f docker-compose.test.yml pull --quiet
+            docker compose -f docker-compose.test.yml up -d --build
+            docker compose -f docker-compose.test.yml exec -T nginx nginx -s reload 2>/dev/null || true

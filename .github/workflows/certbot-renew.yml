@@ -1,0 +1,40 @@
+# Zertifikat-Erneuerung (täglich)
+# Führt certbot renew auf Prod- und Test-Server aus
+
+name: Certbot Renew
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Täglich 3:00 UTC
+  workflow_dispatch:
+
+jobs:
+  renew-prod:
+    name: Renew Prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Renew & Reload
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH || '~/kalender' }}
+            docker compose -f docker-compose.yml --profile renew run --rm certbot renew --webroot -w /var/www/certbot --quiet 2>/dev/null || true
+            docker compose -f docker-compose.yml exec -T nginx nginx -s reload 2>/dev/null || true
+
+  renew-test:
+    name: Renew Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Renew & Reload
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
+            docker compose -f docker-compose.test.yml --profile renew run --rm certbot renew --webroot -w /var/www/certbot --quiet 2>/dev/null || true
+            docker compose -f docker-compose.test.yml exec -T nginx nginx -s reload 2>/dev/null || true

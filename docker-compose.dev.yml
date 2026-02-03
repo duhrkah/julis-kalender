@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: kalender-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/calendar.db
+      - JWT_SECRET_KEY=dev-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - ENVIRONMENT=development
+      - SMTP_ENABLED=${SMTP_ENABLED:-false}
+      - SMTP_HOST=${SMTP_HOST:-smtp.office365.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL:-}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-JuLis Kalender}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
+      - ./backend/scripts:/app/scripts
+      - ./data:/app/data
+    networks:
+      - kalender-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: kalender-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/messages:/app/messages
+      - ./frontend/.env.local:/app/.env.local
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/next.config.js:/app/next.config.js
+      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - kalender-network
+
+networks:
+  kalender-network:
+    driver: bridge
