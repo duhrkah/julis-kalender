@@ -176,34 +176,33 @@ Workflow-Datei: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ### Deploy (deploy.yml)
 
-- **main** → Deploy auf **Produktion** (https://kalender.jlssrv.de)
-- **develop** → Deploy auf **Test** (https://kalender-test.jlssrv.de)
+- **Push auf main** (oder manuell) → Deploy von **Proxy + Produktion + Test** auf einem Server.
+- Beide Domains sind danach erreichbar: https://kalender.jlssrv.de und https://kalender-test.jlssrv.de.
 
 **Benötigte GitHub Secrets:**
 
 | Secret | Beschreibung |
 |--------|--------------|
-| `DEPLOY_HOST` | Hostname/IP des Prod-Servers |
-| `DEPLOY_USER` | SSH-Benutzer |
+| `SSH_HOST` | Hostname/IP des Servers |
+| `SSH_USER` | SSH-Benutzer für Deploy |
 | `SSH_PRIVATE_KEY` | Privater SSH-Key |
-| `DEPLOY_PATH` | Pfad zum Repo auf dem Server (z.B. `~/kalender`) |
+| `DEPLOY_PATH` | Pfad auf dem Server (z.B. `~/kalender`) |
 | `CERTBOT_EMAIL` | E-Mail für Let's Encrypt (optional) |
-| `DEPLOY_HOST_TEST` | Host für Test-Server (optional, sonst wie Prod) |
-| `DEPLOY_USER_TEST` | User für Test-Server (optional) |
-| `DEPLOY_PATH_TEST` | Pfad für Test-Repo (z.B. `~/kalender-test`) |
 
-**Gleicher Server für Prod und Test:** In `docker-compose.test.yml` Ports auf `8080:80` und `8443:443` ändern und einen äußeren Reverse Proxy (z.B. Traefik) verwenden, der `kalender-test.jlssrv.de` auf Port 8080/8443 weiterleitet.
+**Wichtig – auf dem Server einmalig:** Der SSH-Benutzer (`SSH_USER`) muss Docker nutzen dürfen, sonst scheitert der Deploy mit `Permission denied`:
+
+```bash
+# Auf dem Server als root bzw. mit sudo:
+sudo usermod -aG docker DEIN_SSH_USER
+# Danach: einmal ausloggen/einloggen oder Session neu aufbauen, damit die Gruppe aktiv wird
+```
 
 **Vor dem ersten Deploy auf dem Server:**
 
 ```bash
-# Repo klonen (Prod)
-git clone <repo-url> ~/kalender
-cd ~/kalender && git checkout main
-
-# Repo klonen (Test, auf gleichem oder anderem Server)
-git clone <repo-url> ~/kalender-test
-cd ~/kalender-test && git checkout develop
+# Repo-Verzeichnis anlegen (wird vom Workflow per rsync befüllt)
+mkdir -p ~/kalender
+# Docker-Gruppe für SSH_USER siehe oben
 ```
 
 ### Zertifikat-Erneuerung (certbot-renew.yml)
