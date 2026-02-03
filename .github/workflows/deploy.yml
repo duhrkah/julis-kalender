@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - develop
+      - main
   workflow_dispatch:
     inputs:
       target:
@@ -40,7 +40,7 @@ jobs:
 
   deploy-test:
     name: Deploy Test (kalender-test.jlssrv.de)
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production')
+    if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
     runs-on: ubuntu-latest
     environment: test
     steps:
