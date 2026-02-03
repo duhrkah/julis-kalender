@@ -8,7 +8,7 @@ export interface AdminStats {
   approved_events: number;
   rejected_events: number;
   categories_count: number;
-  users_count: number;
+  users_count?: number | null;  // Only for admins; editors get null
 }
 
 export interface AuditLogEntry {

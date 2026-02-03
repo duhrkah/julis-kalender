@@ -74,8 +74,8 @@ async def get_event(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Event not found")
 
-    # Non-admins can only view their own events
-    if current_user.role != "admin" and event.submitter_id != current_user.id:
+    # Non-admins/editors can only view their own events
+    if current_user.role not in ("admin", "editor") and event.submitter_id != current_user.id:
         from fastapi import HTTPException
         raise HTTPException(status_code=403, detail="Not authorized to view this event")
 

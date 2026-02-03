@@ -14,13 +14,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading, logout, isAdmin } = useAuth();
+  const { user, loading, logout, isAdmin, isAdminOrEditor } = useAuth();
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    if (!loading && (!user || !isAdminOrEditor)) {
       router.push('/login');
     }
-  }, [user, loading, isAdmin, router]);
+  }, [user, loading, isAdminOrEditor, router]);
 
   if (loading) {
     return (
@@ -33,7 +33,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !isAdminOrEditor) {
     return null;
   }
 
@@ -64,12 +64,14 @@ export default function AdminLayout({
                 >
                   Kategorien
                 </Link>
-                <Link
-                  href="/admin/users"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Benutzer
-                </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin/users"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Benutzer
+                  </Link>
+                )}
                 <Link
                   href="/admin/audit"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"

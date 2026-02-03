@@ -35,6 +35,7 @@ async def get_public_events(
     skip: int = 0,
     limit: int = 100,
     category_id: Optional[int] = None,
+    category: Optional[str] = Query(None, description="Filter by category name (alternative to category_id)"),
     search: Optional[str] = Query(None, description="Search in title and description"),
     start_date: Optional[date] = Query(None, description="Filter events starting from this date"),
     end_date: Optional[date] = Query(None, description="Filter events up to this date"),
@@ -47,6 +48,7 @@ async def get_public_events(
         skip: Number of records to skip
         limit: Maximum number of records to return
         category_id: Filter by category ID
+        category: Filter by category name (e.g. ?category=Landesverband)
         start_date: Filter events starting from this date
         end_date: Filter events up to this date
         db: Database session
@@ -54,12 +56,18 @@ async def get_public_events(
     Returns:
         List[EventPublic]: List of approved events
     """
+    resolved_category_id = category_id
+    if category and not category_id:
+        cat = category_service.get_category_by_name(db, category)
+        if cat:
+            resolved_category_id = cat.id
+
     events = event_service.get_events(
         db,
         skip=skip,
         limit=limit,
         status_filter="approved",
-        category_id=category_id,
+        category_id=resolved_category_id,
         start_date=start_date,
         end_date=end_date,
         search=search

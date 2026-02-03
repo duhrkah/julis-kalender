@@ -85,8 +85,11 @@
     "modalDateTime": "Date & Time",
     "modalLocation": "Location",
     "modalClose": "Close",
-    "addToCalendar": "Add to Google Calendar",
-    "downloadIcal": "Import to Calendar App",
+    "addToCalendar": "Add to Calendar",
+    "downloadIcal": "Download iCal",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "icalDownloaded": "iCal file downloaded",
     "statsTotal": "Total",
     "emptySearch": "No events found",
     "emptySearchDescription": "Try a different search term or filter."

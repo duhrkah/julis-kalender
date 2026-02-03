@@ -151,14 +151,27 @@ export const exportEventsCsv = async (
 // Public endpoints
 
 /**
+ * Get single public event by ID (no auth required)
+ */
+export const getPublicEvent = async (id: number): Promise<Event> => {
+  const { data } = await apiClient.get<Event>(`/public/events/${id}`);
+  return data;
+};
+
+/**
  * Get public events (no auth required)
+ * @param categoryId - Filter by category ID
+ * @param categoryName - Filter by category name (alternative to categoryId)
  */
 export const getPublicEvents = async (
   categoryId?: number,
-  search?: string
+  search?: string,
+  categoryName?: string
 ): Promise<Event[]> => {
-  const { data } = await apiClient.get<Event[]>('/public/events', {
-    params: { category_id: categoryId, search: search || undefined },
-  });
+  const params: Record<string, string | number> = {};
+  if (categoryId != null) params.category_id = categoryId;
+  if (search) params.search = search;
+  if (categoryName && categoryId == null) params.category = categoryName;
+  const { data } = await apiClient.get<Event[]>('/public/events', { params });
   return data;
 };

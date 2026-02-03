@@ -185,6 +185,26 @@
             <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Schritt 3: In Website einfügen</h3>
             <p>Fügen Sie den iframe-Code in Ihre HTML-Seite ein, z.B. in Typo3, WordPress oder eine statische HTML-Seite.</p>
 
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">URL-Parameter für Kalender-Embed</h3>
+            <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                <li><strong>category_id</strong>: Kategorie vorfiltern (z.B. <code>?category_id=3</code>)</li>
+                <li><strong>category</strong>: Kategorie nach Name (z.B. <code>?category=Landesverband</code>)</li>
+                <li><strong>search</strong>: Suchbegriff (z.B. <code>?search=Seminar</code>)</li>
+                <li><strong>height</strong>: Höhe in px (z.B. <code>?height=600</code>), "auto" für automatisch</li>
+                <li><strong>compact</strong>: Kompakte Darstellung (z.B. <code>?compact=1</code>)</li>
+                <li><strong>view</strong>: "month" oder "list" (z.B. <code>?view=list</code>)</li>
+                <li><strong>theme</strong>: Light/Dark-Modus (z.B. <code>?theme=dark</code>)</li>
+                <li><strong>toolbar</strong>: Navigation verbergen (z.B. <code>?toolbar=0</code>)</li>
+                <li><strong>event</strong>: Deep-Link – Event-Modal beim Laden öffnen (z.B. <code>?event=123</code>)</li>
+            </ul>
+            <p style="margin-top: 10px; color: #666;">Beispiel: <code>src="https://kalender.jlssrv.de/embed/calendar?height=500&compact=1&theme=light"</code></p>
+
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Dynamische Höhe (postMessage)</h3>
+            <p>Die Host-Seite kann die Embed-Höhe per postMessage setzen:</p>
+            <div class="code-block">
+                <code>iframe.contentWindow.postMessage({ type: 'embed-resize', height: 800 }, '*');</code>
+            </div>
+
             <h3 style="margin-top: 20px; margin-bottom: 10px; color: #555;">Anpassungsmöglichkeiten</h3>
             <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
                 <li><strong>width:</strong> Passen Sie die Breite an (z.B. "100%", "800px")</li>
@@ -198,9 +218,11 @@
             <h2>Features</h2>
             <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
                 <li>✅ Responsive Design - funktioniert auf allen Geräten</li>
+                <li>✅ Suche & Kategorie-Filter - direkt im Embed</li>
                 <li>✅ Automatische Updates - neue Events erscheinen automatisch</li>
                 <li>✅ Kategorie-Farbcodierung - Events sind nach Kategorien farblich markiert</li>
-                <li>✅ Event-Details - Klicken auf Events zeigt Details</li>
+                <li>✅ Event-Details - Klicken zeigt Modal mit Google/Outlook/Apple Kalender</li>
+                <li>✅ URL-Parameter - Kategorie, Suche, Höhe, kompakte Ansicht per URL steuerbar</li>
                 <li>✅ Keine JavaScript-Kenntnisse erforderlich</li>
             </ul>
         </div>

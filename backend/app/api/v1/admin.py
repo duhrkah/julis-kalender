@@ -7,7 +7,7 @@ from datetime import date
 import csv
 import io
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_db, require_admin, require_admin_or_editor
 from app.models.user import User
 from app.models.event import Event
 from app.models.category import Category
@@ -22,16 +22,17 @@ router = APIRouter()
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_admin_stats(
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin_or_editor),
 ):
     """
-    Get admin dashboard statistics (Admin only).
+    Get admin dashboard statistics (Admin/Editor).
+    Users count only visible to admins.
     """
     pending_events = db.query(Event).filter(Event.status == "pending").count()
     approved_events = db.query(Event).filter(Event.status == "approved").count()
     rejected_events = db.query(Event).filter(Event.status == "rejected").count()
     categories_count = db.query(Category).count()
-    users_count = db.query(User).count()
+    users_count = db.query(User).count() if current_user.role == "admin" else None
 
     return AdminStatsResponse(
         pending_events=pending_events,
@@ -50,10 +51,10 @@ async def get_audit_logs(
     action: Optional[str] = Query(None, description="Filter by action"),
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_admin_or_editor),
 ):
     """
-    Get audit logs (Admin only).
+    Get audit logs (Admin/Editor).
     """
     logs = audit_service.get_audit_logs(
         db, skip=skip, limit=limit, user_id=user_id, action=action, entity_type=entity_type
@@ -82,10 +83,10 @@ async def get_all_events(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin)
+    _: User = Depends(require_admin_or_editor)
 ):
     """
-    Get all events with filters (Admin only)
+    Get all events with filters (Admin/Editor)
 
     Args:
         skip: Number of records to skip
@@ -116,10 +117,10 @@ async def get_all_events(
 async def get_event(
     event_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin)
+    _: User = Depends(require_admin_or_editor)
 ):
     """
-    Get event by ID (Admin only)
+    Get event by ID (Admin/Editor)
 
     Args:
         event_id: Event ID
@@ -143,10 +144,10 @@ async def update_event(
     event_id: int,
     event_update: EventUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Update any event (Admin only)
+    Update any event (Admin/Editor)
 
     Args:
         event_id: Event ID
@@ -168,10 +169,10 @@ async def update_event(
 async def delete_event(
     event_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Delete any event (Admin only)
+    Delete any event (Admin/Editor)
 
     Args:
         event_id: Event ID
@@ -190,10 +191,10 @@ async def delete_event(
 async def approve_event(
     event_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Approve an event (Admin only)
+    Approve an event (Admin/Editor)
 
     Args:
         event_id: Event ID
@@ -213,10 +214,10 @@ async def reject_event(
     event_id: int,
     rejection: EventRejection,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Reject an event (Admin only)
+    Reject an event (Admin/Editor)
 
     Args:
         event_id: Event ID
@@ -244,9 +245,9 @@ async def reject_event(
 async def bulk_approve_events(
     body: BulkEventIds,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
-    """Approve multiple events at once (Admin only)."""
+    """Approve multiple events at once (Admin/Editor)."""
     approved = 0
     for event_id in body.event_ids:
         try:
@@ -262,9 +263,9 @@ async def bulk_approve_events(
 async def bulk_reject_events(
     body: BulkEventReject,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
-    """Reject multiple events at once (Admin only)."""
+    """Reject multiple events at once (Admin/Editor)."""
     rejected = 0
     for event_id in body.event_ids:
         try:
@@ -284,9 +285,9 @@ async def export_events_csv(
     status_filter: Optional[str] = Query(None),
     category_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin)
+    _: User = Depends(require_admin_or_editor)
 ):
-    """Export events as CSV (Admin only)."""
+    """Export events as CSV (Admin/Editor)."""
     events = event_service.get_events(
         db, skip=0, limit=10000,
         status_filter=status_filter,

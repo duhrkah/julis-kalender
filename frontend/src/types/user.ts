@@ -2,7 +2,7 @@
  * User-related TypeScript types
  */
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'editor' | 'user';
 
 export interface User {
   id: number;
@@ -24,6 +24,7 @@ export interface UserCreate {
 }
 
 export interface UserUpdate {
+  username?: string;
   email?: string;
   full_name?: string;
   password?: string;

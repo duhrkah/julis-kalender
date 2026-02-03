@@ -34,10 +34,11 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading }: UserFo
     try {
       if (isEditMode) {
         const updateData: UserUpdate = {};
+        if (formData.username !== user.username) updateData.username = formData.username;
         if (formData.email !== user.email) updateData.email = formData.email;
         if (formData.full_name !== user.full_name) updateData.full_name = formData.full_name;
         if (formData.password) updateData.password = formData.password;
-        if (formData.role !== user.role) updateData.role = formData.role as 'admin' | 'user';
+        if (formData.role !== user.role) updateData.role = formData.role as 'admin' | 'editor' | 'user';
         if (formData.is_active !== user.is_active) updateData.is_active = formData.is_active;
 
         await onSubmit(updateData);
@@ -81,34 +82,22 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading }: UserFo
         {isEditMode ? 'Benutzer bearbeiten' : 'Neuen Benutzer erstellen'}
       </h2>
 
-      {/* Username - only for create */}
-      {!isEditMode && (
-        <div>
-          <label htmlFor="username" className={labelClasses}>
-            Benutzername *
-          </label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            required
-            value={formData.username}
-            onChange={handleChange}
-            className={inputClasses}
-            disabled={isLoading}
-          />
-        </div>
-      )}
-
-      {/* Display username in edit mode */}
-      {isEditMode && (
-        <div>
-          <label className={labelClasses}>Benutzername</label>
-          <div className="w-full px-3 py-2 border border-border bg-muted rounded-md text-muted-foreground">
-            {formData.username}
-          </div>
-        </div>
-      )}
+      {/* Username - editable in create and edit (admin can change usernames) */}
+      <div>
+        <label htmlFor="username" className={labelClasses}>
+          Benutzername *
+        </label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          required
+          value={formData.username}
+          onChange={handleChange}
+          className={inputClasses}
+          disabled={isLoading}
+        />
+      </div>
 
       {/* Email */}
       <div>
@@ -175,8 +164,9 @@ export default function UserForm({ user, onSubmit, onCancel, isLoading }: UserFo
           className={inputClasses}
           disabled={isLoading}
         >
-          <option value="user">Benutzer</option>
-          <option value="admin">Administrator</option>
+          <option value="user">Untergliederung</option>
+          <option value="editor">Landesvorstand</option>
+          <option value="admin">Admin</option>
         </select>
       </div>
 

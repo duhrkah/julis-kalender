@@ -47,6 +47,20 @@ def get_category(db: Session, category_id: int) -> Optional[Category]:
     return db.query(Category).filter(Category.id == category_id).first()
 
 
+def get_category_by_name(db: Session, name: str) -> Optional[Category]:
+    """
+    Get category by name (case-insensitive)
+
+    Args:
+        db: Database session
+        name: Category name
+
+    Returns:
+        Optional[Category]: Category if found, None otherwise
+    """
+    return db.query(Category).filter(Category.name.ilike(name.strip())).first()
+
+
 def create_category(
     db: Session,
     category: CategoryCreate,

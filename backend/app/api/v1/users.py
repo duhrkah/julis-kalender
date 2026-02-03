@@ -47,7 +47,7 @@ async def update_current_user_profile(
     Returns:
         UserProfile: Updated user profile
     """
-    update_data = user_update.model_dump(exclude_unset=True, exclude={'role', 'is_active'})
+    update_data = user_update.model_dump(exclude_unset=True, exclude={'role', 'is_active', 'username'})
 
     for field, value in update_data.items():
         if field == 'password' and value:
@@ -186,6 +186,12 @@ async def update_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     update_data = user_update.model_dump(exclude_unset=True)
+
+    # Check username uniqueness if changing
+    if "username" in update_data and update_data["username"] != db_user.username:
+        existing = db.query(User).filter(User.username == update_data["username"]).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already exists")
 
     for field, value in update_data.items():
         if field == 'password' and value:

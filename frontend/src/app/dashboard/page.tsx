@@ -9,10 +9,11 @@ import Link from 'next/link';
 import { getMyEventStats, type UserEventStats } from '@/lib/api/events';
 import { useTranslation } from '@/lib/i18n';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import { Plus, ListTodo, Settings } from 'lucide-react';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdminOrEditor } = useAuth();
   const [stats, setStats] = useState<UserEventStats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
 
@@ -48,11 +49,11 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/dashboard/events/new"
-          className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all"
+          className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all hover:scale-[1.02]"
         >
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary text-xl">+</span>
+              <Plus className="text-primary" size={24} />
             </div>
             <h3 className="font-semibold">{t('dashboard.newEventTitle')}</h3>
           </div>
@@ -63,11 +64,11 @@ export default function DashboardPage() {
 
         <Link
           href="/dashboard/events"
-          className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all"
+          className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all hover:scale-[1.02]"
         >
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary text-xl">📋</span>
+              <ListTodo className="text-primary" size={24} />
             </div>
             <h3 className="font-semibold">{t('dashboard.myEventsTitle')}</h3>
           </div>
@@ -76,14 +77,14 @@ export default function DashboardPage() {
           </p>
         </Link>
 
-        {isAdmin && (
+        {isAdminOrEditor && (
           <Link
             href="/admin"
-            className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all"
+            className="block p-6 bg-card rounded-lg border border-border hover:border-primary hover:shadow-md transition-all hover:scale-[1.02]"
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary text-xl">⚙️</span>
+                <Settings className="text-primary" size={24} />
               </div>
               <h3 className="font-semibold">{t('dashboard.adminTitle')}</h3>
             </div>

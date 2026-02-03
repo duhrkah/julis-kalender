@@ -17,7 +17,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, loading, logout, isAdmin } = useAuth();
+  const { user, loading, logout, isAdminOrEditor } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function DashboardLayout({
                 {user.full_name || user.username}
               </span>
               <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                {user.role === 'admin' ? 'Admin' : 'Benutzer'}
+                {user.role === 'admin' ? 'Admin' : user.role === 'editor' ? 'Editor' : 'Benutzer'}
               </span>
               <ThemeToggle />
               <button
@@ -100,7 +100,7 @@ export default function DashboardLayout({
                   {user.full_name || user.username}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {user.role === 'admin' ? 'Admin' : 'Benutzer'}
+                  {user.role === 'admin' ? 'Admin' : user.role === 'editor' ? 'Editor' : 'Benutzer'}
                 </span>
               </div>
 
@@ -129,7 +129,7 @@ export default function DashboardLayout({
                 <Calendar size={18} />
                 <span>Kalender ansehen</span>
               </Link>
-              {isAdmin && (
+              {isAdminOrEditor && (
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}

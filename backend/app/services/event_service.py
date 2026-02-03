@@ -168,8 +168,8 @@ def update_event(
         )
 
     # Check permissions: User can only edit their own pending events
-    # Admins can edit any event
-    if user.role != "admin":
+    # Admins and editors can edit any event
+    if user.role not in ("admin", "editor"):
         if db_event.submitter_id != user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -215,7 +215,7 @@ def delete_event(db: Session, event_id: int, user: User) -> bool:
             detail="Event not found"
         )
 
-    if user.role != "admin" and db_event.submitter_id != user.id:
+    if user.role not in ("admin", "editor") and db_event.submitter_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this event"

@@ -85,8 +85,11 @@
     "modalDateTime": "Datum & Uhrzeit",
     "modalLocation": "Ort",
     "modalClose": "Schließen",
-    "addToCalendar": "In Google Kalender übernehmen",
-    "downloadIcal": "In Kalender importieren",
+    "addToCalendar": "In Kalender übernehmen",
+    "downloadIcal": "iCal herunterladen",
+    "copyLink": "Link kopieren",
+    "linkCopied": "Link kopiert",
+    "icalDownloaded": "iCal-Datei heruntergeladen",
     "statsTotal": "Gesamt",
     "emptySearch": "Keine Events gefunden",
     "emptySearchDescription": "Versuchen Sie einen anderen Suchbegriff oder Filter."

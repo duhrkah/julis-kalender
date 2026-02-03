@@ -17,6 +17,8 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { CalendarSkeleton } from '@/components/ui/Skeleton';
 import { useTranslation } from '@/lib/i18n';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { Search } from 'lucide-react';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -26,6 +28,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const getIcalUrl = (subscribe = false) => {
     const params = new URLSearchParams();
@@ -42,13 +45,13 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, debouncedSearch]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const [eventsData, categoriesData] = await Promise.all([
-        eventApi.getPublicEvents(selectedCategory, searchQuery || undefined),
+        eventApi.getPublicEvents(selectedCategory, debouncedSearch || undefined),
         categoryApi.getPublicCategories(),
       ]);
       setEvents(eventsData);
@@ -87,13 +90,18 @@ export default function Home() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Search */}
-        <div className="mb-4">
+        <div className="mb-4 relative w-full sm:max-w-xs">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+            aria-hidden
+          />
           <input
             type="search"
             placeholder={t('home.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:max-w-xs px-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-9 pr-3 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary/50 transition-colors"
+            aria-label={t('home.searchPlaceholder')}
           />
         </div>
 

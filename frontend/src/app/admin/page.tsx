@@ -5,9 +5,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { getAdminStats, type AdminStats } from '@/lib/api/admin';
 
 export default function AdminDashboardPage() {
+  const { isAdmin } = useAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
 
@@ -69,21 +71,23 @@ export default function AdminDashboardPage() {
           </p>
         </Link>
 
-        {/* User Management */}
-        <Link
-          href="/admin/users"
-          className="block p-6 bg-card rounded-lg border border-border hover:border-primary transition-colors"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary text-xl">👥</span>
+        {/* User Management - Admin only */}
+        {isAdmin && (
+          <Link
+            href="/admin/users"
+            className="block p-6 bg-card rounded-lg border border-border hover:border-primary transition-colors"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary text-xl">👥</span>
+              </div>
+              <h3 className="font-semibold">Benutzer-Verwaltung</h3>
             </div>
-            <h3 className="font-semibold">Benutzer-Verwaltung</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Benutzer erstellen und verwalten
-          </p>
-        </Link>
+            <p className="text-sm text-muted-foreground">
+              Benutzer erstellen und verwalten
+            </p>
+          </Link>
+        )}
 
         {/* Audit Logs */}
         <Link
@@ -133,12 +137,14 @@ export default function AdminDashboardPage() {
             </div>
             <div className="text-sm text-muted-foreground mt-1">Kategorien</div>
           </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold">
-              {stats === null ? '…' : stats.users_count}
+          {isAdmin && (
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
+              <div className="text-2xl font-bold">
+                {stats === null ? '…' : stats.users_count ?? '…'}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">Benutzer</div>
             </div>
-            <div className="text-sm text-muted-foreground mt-1">Benutzer</div>
-          </div>
+          )}
         </div>
       </div>
     </div>

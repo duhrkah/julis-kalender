@@ -21,7 +21,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
-        CheckConstraint(role.in_(['admin', 'user']), name='check_role_type'),
+        CheckConstraint(role.in_(['admin', 'editor', 'user']), name='check_role_type'),
     )
 
     submitted_events = relationship("Event", back_populates="submitter", foreign_keys="Event.submitter_id")

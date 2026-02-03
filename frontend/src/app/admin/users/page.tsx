@@ -25,12 +25,12 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Redirect if not admin
+  // Redirect if not admin (editors cannot access user management)
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
     } else if (!isAdmin) {
-      router.push('/dashboard');
+      router.push('/admin');
     }
   }, [isAuthenticated, isAdmin, router]);
 
@@ -244,10 +244,12 @@ export default function UsersPage() {
                       className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         user.role === 'admin'
                           ? 'bg-julis-soft-purple text-foreground'
-                          : 'bg-julis-soft-cyan text-foreground'
+                          : user.role === 'editor'
+                            ? 'bg-julis-soft-cyan text-foreground'
+                            : 'bg-muted text-muted-foreground'
                       }`}
                     >
-                      {user.role === 'admin' ? 'Admin' : 'Benutzer'}
+                      {user.role === 'admin' ? 'Admin' : user.role === 'editor' ? 'Landesvorstand' : 'Untergliederung'}
                     </span>
                   </td>
                   <td className="px-4 py-3">

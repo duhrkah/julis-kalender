@@ -30,7 +30,7 @@ services:
 networks:
   kalender-shared:
     name: kalender-shared
-    driver: bridge
+    external: true
 
 volumes:
   certbot-data:

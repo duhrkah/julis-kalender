@@ -13,6 +13,7 @@ Eine vollständige Event-Management-Web-App mit Admin-Dashboard, Benutzer-Event-
 - ✅ **iCal-Export**: Events als iCal-Datei exportieren
 - ✅ **Kategorie-System**: Frei definierbare Event-Kategorien durch Admins
 - ✅ **Audit-Logging**: Protokollierung aller Admin-Aktionen
+- ✅ **Rollen-System**: Admin (voll), Editor (ohne Benutzerverwaltung), Benutzer
 
 ## Technologie-Stack
 
@@ -290,10 +291,11 @@ Nach dem Login als Admin haben Sie Zugriff auf:
    - Kategorien löschen
    - Kategorien aktivieren/deaktivieren
 
-3. **Benutzer-Verwaltung** (`/admin/users`)
+3. **Benutzer-Verwaltung** (`/admin/users`, nur für Admins)
    - Neue Benutzer-Accounts erstellen
    - Benutzer aktivieren/deaktivieren
-   - Benutzerrollen verwalten (Admin/Benutzer)
+   - Benutzerrollen verwalten (Admin/Editor/Benutzer)
+   - Benutzernamen bearbeiten
    - Benutzer löschen
 
 4. **Audit-Logs** (`/admin/audit`)
@@ -408,13 +410,13 @@ docker-compose restart backend
 - `PUT /api/v1/events/{id}` - Event bearbeiten
 - `DELETE /api/v1/events/{id}` - Event löschen
 
-### Admin (Admin-Rolle)
+### Admin (Admin- und Editor-Rolle)
 
 - `GET /api/v1/admin/stats` - Dashboard-Statistiken
 - `GET /api/v1/admin/events` - Alle Events
 - `PUT /api/v1/admin/events/{id}/approve` - Genehmigen
 - `PUT /api/v1/admin/events/{id}/reject` - Ablehnen
-- `GET /api/v1/admin/users` - Benutzer verwalten
+- `GET /api/v1/admin/users` - Benutzer verwalten (nur Admin)
 - `GET /api/v1/admin/categories` - Kategorien verwalten
 - `GET /api/v1/admin/audit-logs` - Audit-Logs
 

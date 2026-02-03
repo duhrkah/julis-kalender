@@ -68,11 +68,17 @@ async def get_current_user(
     return user
 
 
+def _is_admin_or_editor(user: User) -> bool:
+    """Check if user has admin or editor role."""
+    return user.role in ("admin", "editor")
+
+
 async def require_admin(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """
-    Dependency to require admin role
+    Dependency to require admin role (for user management only).
+    Only admins can manage users.
 
     Args:
         current_user: Current authenticated user
@@ -87,6 +93,31 @@ async def require_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
+        )
+
+    return current_user
+
+
+async def require_admin_or_editor(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    Dependency to require admin or editor role.
+    Editors can do everything admins can except user management.
+
+    Args:
+        current_user: Current authenticated user
+
+    Returns:
+        User: Current user if admin or editor
+
+    Raises:
+        HTTPException: If user is not admin or editor
+    """
+    if not _is_admin_or_editor(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin or editor access required"
         )
 
     return current_user

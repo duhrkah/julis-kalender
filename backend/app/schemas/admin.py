@@ -11,7 +11,7 @@ class AdminStatsResponse(BaseModel):
     approved_events: int
     rejected_events: int
     categories_count: int
-    users_count: int
+    users_count: Optional[int] = None  # Only set for admins; editors cannot see user count
 
 
 class AuditLogResponse(BaseModel):

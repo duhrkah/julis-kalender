@@ -16,6 +16,8 @@ interface FullCalendarWrapperProps {
   onEventClick?: (event: Event) => void;
   initialView?: 'dayGridMonth' | 'listMonth';
   height?: string | number;
+  /** Hide toolbar (prev/next, title, view switcher) when true - for minimal embed */
+  hideToolbar?: boolean;
 }
 
 export default function FullCalendarWrapper({
@@ -23,6 +25,7 @@ export default function FullCalendarWrapper({
   onEventClick,
   initialView = 'dayGridMonth',
   height = 'auto',
+  hideToolbar = false,
 }: FullCalendarWrapperProps) {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -76,17 +79,19 @@ export default function FullCalendarWrapper({
     }
   };
 
-  const headerToolbar = isMobile
-    ? {
-        left: 'prev,next',
-        center: 'title',
-        right: 'dayGridMonth,listMonth',
-      }
-    : {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,listMonth',
-      };
+  const headerToolbar = hideToolbar
+    ? false
+    : isMobile
+      ? {
+          left: 'prev,next',
+          center: 'title',
+          right: 'dayGridMonth,listMonth',
+        }
+      : {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,listMonth',
+        };
 
   return (
     <div className="fullcalendar-wrapper">

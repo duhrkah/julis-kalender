@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a new user"""
     password: str
-    role: str = "user"
+    role: str = "user"  # admin, editor, or user
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -32,7 +32,8 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    """Schema for updating a user"""
+    """Schema for updating a user (admin can edit username, role, etc.)"""
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None

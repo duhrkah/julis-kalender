@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_db, require_admin_or_editor
 from app.models.user import User
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from app.services import category_service
@@ -18,10 +18,10 @@ async def get_all_categories(
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin)
+    _: User = Depends(require_admin_or_editor)
 ):
     """
-    Get all categories (Admin only)
+    Get all categories (Admin/Editor)
 
     Args:
         skip: Number of records to skip
@@ -41,10 +41,10 @@ async def get_all_categories(
 async def get_category(
     category_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin)
+    _: User = Depends(require_admin_or_editor)
 ):
     """
-    Get category by ID (Admin only)
+    Get category by ID (Admin/Editor)
 
     Args:
         category_id: Category ID
@@ -66,15 +66,15 @@ async def get_category(
 async def create_category(
     category: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_admin_or_editor)
 ):
     """
-    Create a new category (Admin only)
+    Create a new category (Admin/Editor)
 
     Args:
         category: Category creation data
         db: Database session
-        current_user: Current admin user
+        current_user: Current admin or editor user
 
     Returns:
         CategoryResponse: Created category
@@ -91,10 +91,10 @@ async def update_category(
     category_id: int,
     category_update: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Update a category (Admin only)
+    Update a category (Admin/Editor)
 
     Args:
         category_id: Category ID
@@ -116,10 +116,10 @@ async def update_category(
 async def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(require_admin)
+    current_admin: User = Depends(require_admin_or_editor)
 ):
     """
-    Delete a category (Admin only)
+    Delete a category (Admin/Editor)
 
     Args:
         category_id: Category ID

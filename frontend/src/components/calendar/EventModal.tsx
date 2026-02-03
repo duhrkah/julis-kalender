@@ -3,16 +3,20 @@
  */
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Event } from '@/types/event';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useTranslation } from '@/lib/i18n';
-import { Calendar, Download } from 'lucide-react';
+import { Calendar, Download, X, Link2, Check } from 'lucide-react';
+import { APP_URL } from '@/lib/constants';
+import { useToast } from '@/components/ui/toast';
 
 interface EventModalProps {
   event: Event | null;
   onClose: () => void;
+  /** Optional: compact mode for embed (smaller padding, no full-width close) */
+  compact?: boolean;
 }
 
 function formatIcalDateTime(dateStr: string, timeStr?: string | null): string {
@@ -79,23 +83,41 @@ function downloadIcal(event: Event) {
   URL.revokeObjectURL(url);
 }
 
-function buildGoogleCalendarUrl(event: Event): string {
+function buildCalendarUrls(event: Event) {
   const start = new Date(event.start_date + (event.start_time ? `T${event.start_time}` : ''));
   const end = event.end_date
     ? new Date(event.end_date + (event.end_time ? `T${event.end_time}` : ''))
     : new Date(start.getTime() + 60 * 60 * 1000);
-  const params = new URLSearchParams({
+  const dates = `${format(start, "yyyyMMdd'T'HHmmss")}/${format(end, "yyyyMMdd'T'HHmmss")}`;
+
+  const google = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.title,
-    dates: `${format(start, "yyyyMMdd'T'HHmmss")}/${format(end, "yyyyMMdd'T'HHmmss")}`,
+    dates,
   });
-  if (event.location) params.set('location', event.location);
-  if (event.description) params.set('details', event.description);
-  return `https://www.google.com/calendar/render?${params.toString()}`;
+  if (event.location) google.set('location', event.location);
+  if (event.description) google.set('details', event.description);
+
+  const outlook = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: event.title,
+    startdt: format(start, "yyyy-MM-dd'T'HH:mm:ss"),
+    enddt: format(end, "yyyy-MM-dd'T'HH:mm:ss"),
+  });
+  if (event.location) outlook.set('location', event.location);
+  if (event.description) outlook.set('body', event.description);
+
+  return {
+    google: `https://www.google.com/calendar/render?${google.toString()}`,
+    outlook: `https://outlook.live.com/calendar/0/action/compose?${outlook.toString()}`,
+  };
 }
 
-export default function EventModal({ event, onClose }: EventModalProps) {
+export default function EventModal({ event, onClose, compact = false }: EventModalProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -120,7 +142,24 @@ export default function EventModal({ event, onClose }: EventModalProps) {
     }
   };
 
-  const googleUrl = buildGoogleCalendarUrl(event);
+  const urls = buildCalendarUrls(event);
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/#event-${event.id}` : `${APP_URL}/#event-${event.id}`;
+
+  const handleDownloadIcal = () => {
+    downloadIcal(event);
+    toast({ title: t('events.icalDownloaded'), variant: 'success', duration: 3000 });
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      toast({ title: t('events.linkCopied'), variant: 'success', duration: 2000 });
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast({ title: t('common.error'), description: 'Link konnte nicht kopiert werden', variant: 'error' });
+    }
+  };
 
   return (
     <div
@@ -128,12 +167,21 @@ export default function EventModal({ event, onClose }: EventModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-card max-w-2xl w-full rounded-lg shadow-xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+        className={`bg-card max-w-2xl w-full rounded-lg shadow-xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 relative ${compact ? 'max-h-[85vh]' : ''}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="event-modal-title"
       >
+        {/* Close X button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-md hover:bg-muted transition-colors z-10"
+          aria-label={t('events.modalClose')}
+        >
+          <X size={20} />
+        </button>
+
         {/* Header with category color */}
         {event.category && (
           <div
@@ -142,7 +190,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
           />
         )}
 
-        <div className="p-6">
+        <div className={compact ? 'p-4 sm:p-6' : 'p-6'}>
           {/* Title, Organizer and Category */}
           <div className="mb-4">
             <h2 id="event-modal-title" className="text-2xl font-bold mb-2">
@@ -225,18 +273,27 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             </h3>
             <div className="flex flex-wrap gap-2">
               <a
-                href={googleUrl}
+                href={urls.google}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
+                className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
               >
                 <Calendar size={16} />
-                Google Kalender
+                Google
+              </a>
+              <a
+                href={urls.outlook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
+              >
+                <Calendar size={16} />
+                Outlook
               </a>
               <button
                 type="button"
-                onClick={() => downloadIcal(event)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
+                onClick={handleDownloadIcal}
+                className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
               >
                 <Download size={16} />
                 {t('events.downloadIcal')}
@@ -244,15 +301,29 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             </div>
           </div>
 
-          {/* Close Button */}
-          <div className="pt-4 border-t border-border">
+          {/* Share / Copy Link */}
+          <div className="mb-6">
             <button
-              onClick={onClose}
-              className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              type="button"
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted transition-colors text-sm"
             >
-              {t('events.modalClose')}
+              {linkCopied ? <Check size={16} className="text-green-600" /> : <Link2 size={16} />}
+              {linkCopied ? t('events.linkCopied') : t('events.copyLink')}
             </button>
           </div>
+
+          {/* Close Button */}
+          {!compact && (
+            <div className="pt-4 border-t border-border">
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
+                {t('events.modalClose')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
