@@ -9,7 +9,7 @@ CERT_TEST="/etc/letsencrypt/live/${DOMAIN_TEST}/fullchain.pem"
 
 if [ ! -f "$CERT_PROD" ] || [ ! -f "$CERT_TEST" ]; then
     echo "Initiale Zertifikatserstellung für ${DOMAIN_PROD} und ${DOMAIN_TEST}..."
-    cp /etc/nginx/nginx-multi-http.conf /etc/nginx/nginx.conf
+    cp /etc/nginx/nginx-multi-bootstrap.conf /etc/nginx/nginx.conf
     nginx -g "daemon on;"
     sleep 2
 
