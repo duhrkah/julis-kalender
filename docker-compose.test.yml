@@ -1,6 +1,4 @@
 # Test-Umgebung: kalender-test.jlssrv.de
-name: kalender-test
-
 services:
   backend:
     build:
