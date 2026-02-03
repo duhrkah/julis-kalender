@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+const pkg = require('./package.json');
 const nextConfig = {
   output: 'standalone',
 
@@ -28,6 +29,8 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_APP_VERSION: pkg.version || process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0',
+    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV || 'dev',
   },
 };
 

@@ -5,6 +5,11 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+/** Build-Version (aus package.json) */
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+/** Umgebung: dev | test | production */
+export const APP_ENV = process.env.NEXT_PUBLIC_APP_ENV || 'dev';
+
 export const EVENT_STATUS = {
   PENDING: 'pending',
   APPROVED: 'approved',

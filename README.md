@@ -189,7 +189,10 @@ Workflow-Datei: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 | `DEPLOY_PATH` | Pfad auf dem Server (z.B. `~/kalender`) |
 | `CERTBOT_EMAIL` | E-Mail für Let's Encrypt (optional) |
 
-**Wichtig – auf dem Server einmalig:** Der SSH-Benutzer (`SSH_USER`) muss Docker nutzen dürfen, sonst scheitert der Deploy mit `Permission denied`:
+**Wichtig – auf dem Server einmalig:**
+
+- **Docker Compose V2** (erforderlich). Manuelle Installation, falls `apt install docker-compose-plugin` nicht verfügbar: `sudo mkdir -p /usr/local/lib/docker/cli-plugins && sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose && sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose` (bei ARM: `docker-compose-linux-aarch64`)
+- Der SSH-Benutzer (`SSH_USER`) muss Docker nutzen dürfen, sonst scheitert der Deploy mit `Permission denied`:
 
 ```bash
 # Auf dem Server als root bzw. mit sudo:

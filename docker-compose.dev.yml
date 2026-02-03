@@ -41,6 +41,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://192.168.178.24:8000/api/v1
       - NEXT_PUBLIC_APP_URL=http://192.168.178.24:3000
+      - NEXT_PUBLIC_APP_ENV=development
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
