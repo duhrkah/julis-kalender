@@ -22,40 +22,74 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH || '~/kalender' }}
-            git fetch origin main
-            git reset --hard origin/main
-            export DOMAIN=kalender.jlssrv.de
-            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
-            docker compose -f docker-compose.yml pull --quiet
-            docker compose -f docker-compose.yml up -d --build
-            docker compose -f docker-compose.yml exec -T nginx nginx -s reload 2>/dev/null || true
+          ref: main
+
+      - name: Deploy auf Server (rsync + Docker)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kalender' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "mkdir -p ${DEPLOY_PATH}"
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'frontend/node_modules' \
+            --exclude 'frontend/.next' \
+            --exclude 'backend/__pycache__' \
+            --exclude 'data' \
+            --exclude '.env' \
+            -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
+            ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
+          ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
+            export DOMAIN=kalender.jlssrv.de && \
+            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
+            docker compose -f docker-compose.yml pull --quiet && \
+            docker compose -f docker-compose.yml up -d --build && \
+            docker compose -f docker-compose.yml exec -T nginx nginx -s reload 2>/dev/null || true"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
   deploy-test:
     name: Deploy Test (kalender-test.jlssrv.de)
-    if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
     runs-on: ubuntu-latest
     environment: test
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          host: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
-            git fetch origin main
-            git reset --hard origin/main
-            export DOMAIN=kalender-test.jlssrv.de
-            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
-            docker compose -f docker-compose.test.yml pull --quiet
-            docker compose -f docker-compose.test.yml up -d --build
-            docker compose -f docker-compose.test.yml exec -T nginx nginx -s reload 2>/dev/null || true
+          ref: main
+
+      - name: Deploy auf Server (rsync + Docker)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender-test' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "mkdir -p ${DEPLOY_PATH}"
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'frontend/node_modules' \
+            --exclude 'frontend/.next' \
+            --exclude 'backend/__pycache__' \
+            --exclude 'data' \
+            --exclude '.env' \
+            -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
+            ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
+          ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
+            export DOMAIN=kalender-test.jlssrv.de && \
+            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
+            docker compose -f docker-compose.test.yml pull --quiet && \
+            docker compose -f docker-compose.test.yml up -d --build && \
+            docker compose -f docker-compose.test.yml exec -T nginx nginx -s reload 2>/dev/null || true"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
