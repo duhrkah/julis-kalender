@@ -1,5 +1,4 @@
 # Produktion: kalender.jlssrv.de
-# Läuft parallel mit Test. Shared Nginx (docker-compose.proxy.yml) routet beide Domains.
 
 services:
   backend:

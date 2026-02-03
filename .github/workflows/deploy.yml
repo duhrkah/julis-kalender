@@ -5,20 +5,10 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      target:
-        description: 'Deploy-Ziel'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - test
 
 jobs:
-  deploy-prod:
-    name: Deploy Produktion (kalender.jlssrv.de)
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
+  deploy:
+    name: Deploy (Proxy + Prod + Test)
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -33,11 +23,14 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kalender' }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "mkdir -p ${DEPLOY_PATH}"
+
           rsync -avz --delete \
             --exclude '.git' \
             --exclude 'frontend/node_modules' \
@@ -47,47 +40,10 @@ jobs:
             --exclude '.env' \
             -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
             ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
-          ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
-            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
+
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
+            export CERTBOT_EMAIL=${CERTBOT_EMAIL} && \
             docker compose -f docker-compose.proxy.yml up -d --build && \
-            docker compose -f docker-compose.yml pull --quiet && \
             docker compose -f docker-compose.yml up -d --build && \
-            docker compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true"
-
-  deploy-test:
-    name: Deploy Test (kalender-test.jlssrv.de)
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'test')
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Deploy auf Server (rsync + Docker)
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST_TEST || secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER_TEST || secrets.SSH_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH_TEST || secrets.DEPLOY_PATH || '~/kalender' }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "mkdir -p ${DEPLOY_PATH}"
-          rsync -avz --delete \
-            --exclude '.git' \
-            --exclude 'frontend/node_modules' \
-            --exclude 'frontend/.next' \
-            --exclude 'backend/__pycache__' \
-            --exclude 'data' \
-            --exclude '.env' \
-            -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
-            ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
-          ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
-            export CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }} && \
-            docker compose -f docker-compose.proxy.yml up -d --build && \
-            docker compose -f docker-compose.test.yml pull --quiet && \
             docker compose -f docker-compose.test.yml up -d --build && \
             docker compose -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true"

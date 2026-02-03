@@ -1,7 +1,3 @@
-# Gemeinsamer Nginx Reverse Proxy für Production + Test
-# Ermöglicht parallelen Betrieb beider Umgebungen auf Port 80/443
-# Verwendung: docker compose -f docker-compose.proxy.yml up -d
-
 services:
   nginx:
     build:
