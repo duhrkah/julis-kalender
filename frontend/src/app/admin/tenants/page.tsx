@@ -8,7 +8,7 @@ import { getAllTenants, createTenant, updateTenant, deleteTenant, getTenantStats
 
 export default function TenantsAdminPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

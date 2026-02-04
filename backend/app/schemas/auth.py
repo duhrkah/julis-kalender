@@ -9,6 +9,12 @@ class TokenData(BaseModel):
     role: str | None = None
 
 
+class TokenPayload(BaseModel):
+    """JWT token payload"""
+    sub: int | None = None
+    exp: int | None = None
+
+
 class Token(BaseModel):
     """JWT token response"""
     access_token: str

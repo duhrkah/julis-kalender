@@ -1,5 +1,5 @@
 # Zertifikat-Erneuerung (täglich)
-# Ein Zertifikat für beide Domains (kalender + kalender-test)
+# Zertifikate für alle Domains (kalender + kalender-test + kalender-buvo)
 
 name: Certbot Renew
 

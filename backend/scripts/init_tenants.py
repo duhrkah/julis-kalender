@@ -32,7 +32,7 @@ LANDESVERBAENDE = [
     {"name": "JuLis Nordrhein-Westfalen", "slug": "nordrhein-westfalen", "short": "NW"},
     {"name": "JuLis Rheinland-Pfalz", "slug": "rheinland-pfalz", "short": "RP"},
     {"name": "JuLis Saarland", "slug": "saarland", "short": "SL"},
-    {"name": "JuLis Sachsen", "slug": "sachsen", "short": "SN"},
+    {"name": "JuLia Sachsen", "slug": "sachsen", "short": "SN"},
     {"name": "JuLis Sachsen-Anhalt", "slug": "sachsen-anhalt", "short": "ST"},
     {"name": "JuLis Schleswig-Holstein", "slug": "schleswig-holstein", "short": "SH"},
     {"name": "JuLis Thüringen", "slug": "thueringen", "short": "TH"},
@@ -78,10 +78,12 @@ def init_tenants():
                 existing_count += 1
                 continue
             
+            # Generate description - handle both "JuLis" and "JuLia" prefixes
+            name_without_prefix = lv_data['name'].replace('JuLis ', '').replace('JuLia ', '')
             landesverband = Tenant(
                 name=lv_data["name"],
                 slug=lv_data["slug"],
-                description=f"Junge Liberale {lv_data['name'].replace('JuLis ', '')}",
+                description=f"Junge Liberale {name_without_prefix}",
                 level=TenantLevel.LANDESVERBAND.value,
                 parent_id=bundesverband.id,
                 is_active=True,

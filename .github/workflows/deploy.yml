@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy (Proxy + Prod + Test)
+    name: Deploy (Proxy + Prod + Test + BuVo)
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -48,6 +48,8 @@ jobs:
             docker compose -p kalender-prod -f docker-compose.yml up -d --build && \
             docker compose -p kalender-test -f docker-compose.test.yml down 2>/dev/null || true && \
             docker compose -p kalender-test -f docker-compose.test.yml up -d --build && \
+            docker compose -p kalender-buvo -f docker-compose.buvo.yml down 2>/dev/null || true && \
+            docker compose -p kalender-buvo -f docker-compose.buvo.yml up -d --build && \
             docker compose -p kalender-proxy -f docker-compose.proxy.yml down 2>/dev/null || true && \
             docker compose -p kalender-proxy -f docker-compose.proxy.yml up -d --build && \
             docker compose -p kalender-proxy -f docker-compose.proxy.yml exec -T nginx nginx -s reload 2>/dev/null || true"
