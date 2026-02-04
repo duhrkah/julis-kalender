@@ -72,12 +72,28 @@ def upgrade() -> None:
     if 'categories' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('categories')]
         
+        # First, drop the old unique constraint on name
+        # Note: SQLite doesn't support dropping constraints, so we handle this carefully
         if 'tenant_id' not in columns:
-            # For SQLite, batch mode recreates the table without old constraints
-            # We define the new schema and it handles the rest
-            with op.batch_alter_table('categories', recreate='always') as batch_op:
+            # For SQLite, we need to use batch mode
+            with op.batch_alter_table('categories') as batch_op:
+                # Try to drop the unique constraint if it exists
+                try:
+                    batch_op.drop_constraint('uq_categories_name', type_='unique')
+                except Exception:
+                    pass  # Constraint might not exist or have different name
+                
                 batch_op.add_column(sa.Column('tenant_id', sa.Integer(), nullable=True))
                 batch_op.add_column(sa.Column('is_global', sa.Boolean(), nullable=False, server_default='0'))
+                batch_op.create_index('ix_categories_tenant_id', ['tenant_id'])
+                batch_op.create_foreign_key(
+                    'fk_categories_tenant_id',
+                    'tenants',
+                    ['tenant_id'], ['id'],
+                    ondelete='CASCADE'
+                )
+                # Create new unique constraint: name + tenant_id combination
+                batch_op.create_unique_constraint('uq_category_name_tenant', ['name', 'tenant_id'])
 
 
 def downgrade() -> None:
