@@ -33,6 +33,9 @@ class Event(Base):
 
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
 
+    # Multi-tenancy: Event belongs to a tenant (Verband)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
+
     is_public = Column(Boolean, default=True, nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -42,6 +45,8 @@ class Event(Base):
         CheckConstraint(status.in_(['pending', 'approved', 'rejected']), name='check_status_type'),
     )
 
+    # Relationships
+    tenant = relationship("Tenant", back_populates="events")
     submitter = relationship("User", back_populates="submitted_events", foreign_keys=[submitter_id])
     approver = relationship("User", back_populates="approved_events", foreign_keys=[approved_by])
     category = relationship("Category", back_populates="events")
