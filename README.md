@@ -254,7 +254,30 @@ Workflow-Datei: [.github/workflows/ci.yml](.github/workflows/ci.yml).
 ### Deploy (deploy.yml)
 
 - **Push auf main** (oder manuell) → Deploy von **Proxy + Produktion + Test** auf einem Server.
-- Beide Domains sind danach erreichbar: https://kalender.jlssrv.de und https://kalender-test.jlssrv.de.
+- Domains: https://kalender.jlssrv.de und https://kalender-test.jlssrv.de
+
+### Deploy BuVo (deploy-buvo.yml)
+
+- **Nur manuell** (workflow_dispatch) → Deploy der **Bundesverband-Instanz**
+- Komplett separates Docker-Image, unabhängig von Prod/Test
+- Domain: https://kalender-buvo.jlssrv.de
+
+**Einmaliges Setup für BuVo-Zertifikat:**
+
+```bash
+# SSH zum Server
+ssh user@server && cd ~/kalender
+
+# Certbot für kalender-buvo.jlssrv.de ausführen (mit --profile renew run)
+docker compose -p kalender-proxy -f docker-compose.proxy.yml --profile renew run --rm certbot \
+  certonly --webroot -w /var/www/certbot \
+  -d kalender-buvo.jlssrv.de \
+  --email admin@jlssrv.de \
+  --agree-tos --no-eff-email
+
+# Nginx neu laden
+docker compose -p kalender-proxy -f docker-compose.proxy.yml exec nginx nginx -s reload
+```
 
 **Benötigte GitHub Secrets:**
 

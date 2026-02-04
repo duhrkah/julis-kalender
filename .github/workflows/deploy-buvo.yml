@@ -1,0 +1,82 @@
+# Separater Deploy-Workflow für Bundesverband-Instanz (kalender-buvo.jlssrv.de)
+# Komplett unabhängig von Prod/Test-Deployments
+
+name: Deploy BuVo
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Bestätigung für BuVo-Deployment'
+        required: true
+        default: 'deploy'
+
+jobs:
+  deploy-buvo:
+    name: Deploy Bundesverband (kalender-buvo.jlssrv.de)
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event.inputs.confirm == 'deploy'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Deploy BuVo auf Server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kalender' }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL || 'admin@jlssrv.de' }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Verzeichnis erstellen
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "mkdir -p ${DEPLOY_PATH}"
+
+          # Nur relevante Dateien für BuVo synchronisieren
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'frontend/node_modules' \
+            --exclude 'frontend/.next' \
+            --exclude 'backend/__pycache__' \
+            --exclude 'data' \
+            --exclude '.env' \
+            -e "ssh -o StrictHostKeyChecking=no -i $HOME/.ssh/deploy_key" \
+            ./ ${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/
+
+          # BuVo Container deployen (komplett separates Image)
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "cd ${DEPLOY_PATH} && \
+            export CERTBOT_EMAIL=${CERTBOT_EMAIL} && \
+            docker network create kalender-shared 2>/dev/null || true && \
+            docker compose -p kalender-buvo -f docker-compose.buvo.yml down 2>/dev/null || true && \
+            docker compose -p kalender-buvo -f docker-compose.buvo.yml build --no-cache && \
+            docker compose -p kalender-buvo -f docker-compose.buvo.yml up -d && \
+            echo '✓ BuVo deployment complete'"
+
+      - name: Check BuVo Health
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '~/kalender' }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          echo "Warte auf Container-Start..."
+          sleep 15
+          
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ${SSH_USER}@${SSH_HOST} "
+            echo '=== BuVo Container Status ===' && \
+            docker ps --filter 'name=kalender-buvo' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' && \
+            echo '' && \
+            echo '=== BuVo Backend Health ===' && \
+            curl -sf http://localhost:8000/health 2>/dev/null && echo ' (via kalender-buvo-backend)' || echo 'Backend noch nicht bereit'
+          "

@@ -19,23 +19,25 @@ from app.database import SessionLocal
 from app.models.tenant import Tenant, TenantLevel
 
 # German state associations (Landesverbände)
+# name: Kurzform "JuLis {Verband}" (oder "JuLia" für Sachsen)
+# full_name: Langform "Junge Liberale {Verband}"
 LANDESVERBAENDE = [
-    {"name": "JuLis Baden-Württemberg", "slug": "baden-wuerttemberg", "short": "BW"},
-    {"name": "JuLis Bayern", "slug": "bayern", "short": "BY"},
-    {"name": "JuLis Berlin", "slug": "berlin", "short": "BE"},
-    {"name": "JuLis Brandenburg", "slug": "brandenburg", "short": "BB"},
-    {"name": "JuLis Bremen", "slug": "bremen", "short": "HB"},
-    {"name": "JuLis Hamburg", "slug": "hamburg", "short": "HH"},
-    {"name": "JuLis Hessen", "slug": "hessen", "short": "HE"},
-    {"name": "JuLis Mecklenburg-Vorpommern", "slug": "mecklenburg-vorpommern", "short": "MV"},
-    {"name": "JuLis Niedersachsen", "slug": "niedersachsen", "short": "NI"},
-    {"name": "JuLis Nordrhein-Westfalen", "slug": "nordrhein-westfalen", "short": "NW"},
-    {"name": "JuLis Rheinland-Pfalz", "slug": "rheinland-pfalz", "short": "RP"},
-    {"name": "JuLis Saarland", "slug": "saarland", "short": "SL"},
-    {"name": "JuLia Sachsen", "slug": "sachsen", "short": "SN"},
-    {"name": "JuLis Sachsen-Anhalt", "slug": "sachsen-anhalt", "short": "ST"},
-    {"name": "JuLis Schleswig-Holstein", "slug": "schleswig-holstein", "short": "SH"},
-    {"name": "JuLis Thüringen", "slug": "thueringen", "short": "TH"},
+    {"name": "JuLis Baden-Württemberg", "full_name": "Junge Liberale Baden-Württemberg", "slug": "baden-wuerttemberg", "short": "BW"},
+    {"name": "JuLis Bayern", "full_name": "Junge Liberale Bayern", "slug": "bayern", "short": "BY"},
+    {"name": "JuLis Berlin", "full_name": "Junge Liberale Berlin", "slug": "berlin", "short": "BE"},
+    {"name": "JuLis Brandenburg", "full_name": "Junge Liberale Brandenburg", "slug": "brandenburg", "short": "BB"},
+    {"name": "JuLis Bremen", "full_name": "Junge Liberale Bremen", "slug": "bremen", "short": "HB"},
+    {"name": "JuLis Hamburg", "full_name": "Junge Liberale Hamburg", "slug": "hamburg", "short": "HH"},
+    {"name": "JuLis Hessen", "full_name": "Junge Liberale Hessen", "slug": "hessen", "short": "HE"},
+    {"name": "JuLis Mecklenburg-Vorpommern", "full_name": "Junge Liberale Mecklenburg-Vorpommern", "slug": "mecklenburg-vorpommern", "short": "MV"},
+    {"name": "JuLis Niedersachsen", "full_name": "Junge Liberale Niedersachsen", "slug": "niedersachsen", "short": "NI"},
+    {"name": "JuLis Nordrhein-Westfalen", "full_name": "Junge Liberale Nordrhein-Westfalen", "slug": "nordrhein-westfalen", "short": "NW"},
+    {"name": "JuLis Rheinland-Pfalz", "full_name": "Junge Liberale Rheinland-Pfalz", "slug": "rheinland-pfalz", "short": "RP"},
+    {"name": "JuLis Saarland", "full_name": "Junge Liberale Saarland", "slug": "saarland", "short": "SL"},
+    {"name": "JuLia Sachsen", "full_name": "Junge Liberale Sachsen", "slug": "sachsen", "short": "SN"},
+    {"name": "JuLis Sachsen-Anhalt", "full_name": "Junge Liberale Sachsen-Anhalt", "slug": "sachsen-anhalt", "short": "ST"},
+    {"name": "JuLis Schleswig-Holstein", "full_name": "Junge Liberale Schleswig-Holstein", "slug": "schleswig-holstein", "short": "SH"},
+    {"name": "JuLis Thüringen", "full_name": "Junge Liberale Thüringen", "slug": "thueringen", "short": "TH"},
 ]
 
 
@@ -78,12 +80,11 @@ def init_tenants():
                 existing_count += 1
                 continue
             
-            # Generate description - handle both "JuLis" and "JuLia" prefixes
-            name_without_prefix = lv_data['name'].replace('JuLis ', '').replace('JuLia ', '')
+            # Use full_name for description (Langform)
             landesverband = Tenant(
-                name=lv_data["name"],
+                name=lv_data["name"],  # Kurzform: JuLis {Verband}
                 slug=lv_data["slug"],
-                description=f"Junge Liberale {name_without_prefix}",
+                description=lv_data["full_name"],  # Langform: Junge Liberale {Verband}
                 level=TenantLevel.LANDESVERBAND.value,
                 parent_id=bundesverband.id,
                 is_active=True,
