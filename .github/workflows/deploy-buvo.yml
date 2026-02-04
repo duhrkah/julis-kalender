@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: buvo
+          ref: main
 
       - name: Deploy BuVo auf Server
         env:
