@@ -2,12 +2,13 @@
 from fastapi import APIRouter, Depends, status, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 from datetime import date
 import csv
 import io
 
-from app.api.deps import get_db, require_admin, require_admin_or_editor
+from app.api.deps import get_db, require_admin, require_admin_or_editor, get_tenant_filter
 from app.models.user import User
 from app.models.event import Event
 from app.models.category import Category
@@ -21,18 +22,58 @@ router = APIRouter()
 
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_admin_stats(
+    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_editor),
 ):
     """
     Get admin dashboard statistics (Admin/Editor).
     Users count only visible to admins.
+    Supports multi-tenancy filtering.
     """
-    pending_events = db.query(Event).filter(Event.status == "pending").count()
-    approved_events = db.query(Event).filter(Event.status == "approved").count()
-    rejected_events = db.query(Event).filter(Event.status == "rejected").count()
-    categories_count = db.query(Category).count()
-    users_count = db.query(User).count() if current_user.role == "admin" else None
+    # Get visible tenant IDs for the current user
+    visible_tenant_ids = get_tenant_filter(db, current_user, tenant_id)
+    
+    # Base query for events
+    def event_query_with_tenant(status_filter: str):
+        query = db.query(Event).filter(Event.status == status_filter)
+        if visible_tenant_ids:
+            query = query.filter(
+                or_(
+                    Event.tenant_id.in_(visible_tenant_ids),
+                    Event.tenant_id == None  # Include legacy events
+                )
+            )
+        return query.count()
+    
+    pending_events = event_query_with_tenant("pending")
+    approved_events = event_query_with_tenant("approved")
+    rejected_events = event_query_with_tenant("rejected")
+    
+    # Categories count (with tenant filter)
+    cat_query = db.query(Category)
+    if visible_tenant_ids:
+        cat_query = cat_query.filter(
+            or_(
+                Category.tenant_id.in_(visible_tenant_ids),
+                Category.tenant_id == None,
+                Category.is_global == True
+            )
+        )
+    categories_count = cat_query.count()
+    
+    # Users count (admin only, with tenant filter)
+    users_count = None
+    if current_user.role == "admin":
+        user_query = db.query(User)
+        if visible_tenant_ids:
+            user_query = user_query.filter(
+                or_(
+                    User.tenant_id.in_(visible_tenant_ids),
+                    User.tenant_id == None
+                )
+            )
+        users_count = user_query.count()
 
     return AdminStatsResponse(
         pending_events=pending_events,
@@ -82,11 +123,15 @@ async def get_all_events(
     category_id: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin_or_editor)
+    current_user: User = Depends(require_admin_or_editor)
 ):
     """
     Get all events with filters (Admin/Editor)
+    
+    Supports multi-tenancy: Admins of Bundesverband can see all events.
+    Admins of Landesverband can only see events from their Verband and children.
 
     Args:
         skip: Number of records to skip
@@ -95,12 +140,16 @@ async def get_all_events(
         category_id: Filter by category ID
         start_date: Filter events starting from this date
         end_date: Filter events up to this date
+        tenant_id: Filter by specific tenant ID
         db: Database session
-        _: Current admin user (required)
+        current_user: Current admin/editor user
 
     Returns:
         List[EventResponse]: List of events
     """
+    # Get visible tenant IDs for the current user
+    visible_tenant_ids = get_tenant_filter(db, current_user, tenant_id)
+    
     events = event_service.get_events(
         db,
         skip=skip,
@@ -108,7 +157,8 @@ async def get_all_events(
         status_filter=status_filter,
         category_id=category_id,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        tenant_ids=visible_tenant_ids if visible_tenant_ids else None
     )
     return events
 
@@ -284,28 +334,33 @@ async def bulk_reject_events(
 async def export_events_csv(
     status_filter: Optional[str] = Query(None),
     category_id: Optional[int] = None,
+    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin_or_editor)
+    current_user: User = Depends(require_admin_or_editor)
 ):
-    """Export events as CSV (Admin/Editor)."""
+    """Export events as CSV (Admin/Editor). Supports multi-tenancy filtering."""
+    # Get visible tenant IDs for the current user
+    visible_tenant_ids = get_tenant_filter(db, current_user, tenant_id)
+    
     events = event_service.get_events(
         db, skip=0, limit=10000,
         status_filter=status_filter,
-        category_id=category_id
+        category_id=category_id,
+        tenant_ids=visible_tenant_ids if visible_tenant_ids else None
     )
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
         "id", "title", "organizer", "description", "start_date", "start_time", "end_date", "end_time",
-        "location", "location_url", "status", "category", "submitter_name", "submitter_email"
+        "location", "location_url", "status", "category", "submitter_name", "submitter_email", "tenant_id"
     ])
     for e in events:
         writer.writerow([
             e.id, e.title, e.organizer or "", (e.description or "")[:500], e.start_date, e.start_time,
             e.end_date, e.end_time, e.location, e.location_url, e.status,
             e.category.name if e.category else "",
-            e.submitter_name, e.submitter_email
+            e.submitter_name, e.submitter_email, e.tenant_id or ""
         ])
 
     output.seek(0)

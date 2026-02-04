@@ -1,5 +1,5 @@
 """User SQLAlchemy model"""
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, CheckConstraint, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -17,6 +17,10 @@ class User(Base):
     role = Column(String(20), nullable=False, default="user")
     full_name = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Multi-tenancy: User belongs to a tenant (Verband)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -24,6 +28,8 @@ class User(Base):
         CheckConstraint(role.in_(['admin', 'editor', 'user']), name='check_role_type'),
     )
 
+    # Relationships
+    tenant = relationship("Tenant", back_populates="users")
     submitted_events = relationship("Event", back_populates="submitter", foreign_keys="Event.submitter_id")
     approved_events = relationship("Event", back_populates="approver", foreign_keys="Event.approved_by")
     created_categories = relationship("Category", back_populates="creator")

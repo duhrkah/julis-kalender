@@ -74,6 +74,7 @@ class EventResponse(EventBase):
     rejection_reason: Optional[str]
     approved_at: Optional[datetime]
     approved_by: Optional[int]
+    tenant_id: Optional[int] = None  # Tenant the event belongs to
     created_at: datetime
     updated_at: datetime
 
@@ -97,6 +98,7 @@ class EventPublic(BaseModel):
     organizer: Optional[str] = None
     category_id: Optional[int]
     category: Optional[CategoryPublic] = None
+    tenant_id: Optional[int] = None  # Tenant the event belongs to
 
     model_config = ConfigDict(from_attributes=True)
 

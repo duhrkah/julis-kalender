@@ -2,6 +2,7 @@
 from typing import List, Optional
 from datetime import datetime, date
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from fastapi import HTTPException, status
 
 from app.models.event import Event
@@ -19,7 +20,8 @@ def get_events(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     submitter_id: Optional[int] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    tenant_ids: Optional[List[int]] = None
 ) -> List[Event]:
     """
     Get events with filters
@@ -34,6 +36,7 @@ def get_events(
         end_date: Filter events up to this date
         submitter_id: Filter by submitter user ID
         search: Search in title and description (case-insensitive)
+        tenant_ids: Filter by tenant IDs (multi-tenancy support)
 
     Returns:
         List[Event]: List of events
@@ -60,6 +63,16 @@ def get_events(
 
     if submitter_id:
         query = query.filter(Event.submitter_id == submitter_id)
+
+    # Multi-tenancy filter
+    if tenant_ids is not None and len(tenant_ids) > 0:
+        # Include events from specified tenants OR events without tenant (legacy/global)
+        query = query.filter(
+            or_(
+                Event.tenant_id.in_(tenant_ids),
+                Event.tenant_id == None  # Include legacy events without tenant
+            )
+        )
 
     return query.order_by(Event.start_date.desc()).offset(skip).limit(limit).all()
 
@@ -106,7 +119,8 @@ def create_event(
     db: Session,
     event: EventCreate,
     submitter_id: int,
-    submitter_user: User
+    submitter_user: User,
+    tenant_id: Optional[int] = None
 ) -> Event:
     """
     Create a new event (status: pending)
@@ -116,18 +130,23 @@ def create_event(
         event: Event creation data
         submitter_id: ID of the user submitting the event
         submitter_user: User object of submitter
+        tenant_id: Optional tenant ID (defaults to user's tenant)
 
     Returns:
         Event: Created event
     """
     submitter_name = event.submitter_name or submitter_user.full_name or submitter_user.username
     submitter_email = event.submitter_email or submitter_user.email
+    
+    # Use provided tenant_id or fall back to user's tenant
+    event_tenant_id = tenant_id if tenant_id is not None else submitter_user.tenant_id
 
     db_event = Event(
         **event.model_dump(exclude={'submitter_name', 'submitter_email'}),
         submitter_id=submitter_id,
         submitter_name=submitter_name,
         submitter_email=submitter_email,
+        tenant_id=event_tenant_id,
         status="pending"
     )
 

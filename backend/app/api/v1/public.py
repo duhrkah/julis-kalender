@@ -5,28 +5,63 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
-from app.api.deps import get_db
+from app.api.deps import get_db, get_visible_tenant_ids_for_public, get_tenant_context
 from app.schemas.category import CategoryPublic
 from app.schemas.event import EventPublic
-from app.services import category_service, event_service, ical_service
+from app.schemas.tenant import TenantPublic
+from app.services import category_service, event_service, ical_service, tenant_service
 
 router = APIRouter()
 
 
+@router.get("/tenants", response_model=List[TenantPublic])
+async def get_public_tenants(
+    level: Optional[str] = Query(None, description="Filter by level: bundesverband, landesverband, bezirksverband"),
+    parent_id: Optional[int] = Query(None, description="Filter by parent tenant ID"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all active tenants (Public endpoint).
+    Used for tenant selection dropdowns and navigation.
+
+    Args:
+        level: Filter by tenant level
+        parent_id: Filter by parent tenant ID
+        db: Database session
+
+    Returns:
+        List[TenantPublic]: List of active tenants
+    """
+    tenants = tenant_service.get_tenants(
+        db,
+        active_only=True,
+        level=level,
+        parent_id=parent_id
+    )
+    return tenants
+
+
 @router.get("/categories", response_model=List[CategoryPublic])
 async def get_public_categories(
+    tenant_ids: List[int] = Depends(get_visible_tenant_ids_for_public),
     db: Session = Depends(get_db)
 ):
     """
     Get all active categories (Public endpoint)
 
     Args:
+        tenant_ids: Visible tenant IDs from context
         db: Database session
 
     Returns:
         List[CategoryPublic]: List of active categories
     """
-    categories = category_service.get_categories(db, active_only=True)
+    categories = category_service.get_categories(
+        db, 
+        active_only=True,
+        tenant_ids=tenant_ids if tenant_ids else None,
+        include_global=True
+    )
     return categories
 
 
@@ -39,10 +74,14 @@ async def get_public_events(
     search: Optional[str] = Query(None, description="Search in title and description"),
     start_date: Optional[date] = Query(None, description="Filter events starting from this date"),
     end_date: Optional[date] = Query(None, description="Filter events up to this date"),
+    tenant_ids: List[int] = Depends(get_visible_tenant_ids_for_public),
     db: Session = Depends(get_db)
 ):
     """
     Get all approved events (Public endpoint)
+    
+    Supports multi-tenancy: Use X-Tenant-Slug header or tenant_id query parameter
+    to filter events for a specific Verband. Without tenant context, shows all events.
 
     Args:
         skip: Number of records to skip
@@ -51,6 +90,7 @@ async def get_public_events(
         category: Filter by category name (e.g. ?category=Landesverband)
         start_date: Filter events starting from this date
         end_date: Filter events up to this date
+        tenant_ids: Visible tenant IDs from context
         db: Database session
 
     Returns:
@@ -70,7 +110,8 @@ async def get_public_events(
         category_id=resolved_category_id,
         start_date=start_date,
         end_date=end_date,
-        search=search
+        search=search,
+        tenant_ids=tenant_ids if tenant_ids else None
     )
     return events
 
@@ -108,15 +149,20 @@ async def export_ical(
     category_id: Optional[int] = None,
     start_date: Optional[date] = Query(None, description="Filter events starting from this date"),
     end_date: Optional[date] = Query(None, description="Filter events up to this date"),
+    tenant_ids: List[int] = Depends(get_visible_tenant_ids_for_public),
     db: Session = Depends(get_db)
 ):
     """
     Export approved events as iCal/ICS file (Public endpoint)
+    
+    Supports multi-tenancy: Use X-Tenant-Slug header or tenant_id query parameter
+    to filter events for a specific Verband.
 
     Args:
         category_id: Filter by category ID
         start_date: Filter events starting from this date
         end_date: Filter events up to this date
+        tenant_ids: Visible tenant IDs from context
         db: Database session
 
     Returns:
@@ -129,7 +175,8 @@ async def export_ical(
         status_filter="approved",
         category_id=category_id,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        tenant_ids=tenant_ids if tenant_ids else None
     )
 
     ical_content = ical_service.generate_ical(events)

@@ -15,6 +15,7 @@ class UserCreate(UserBase):
     """Schema for creating a new user"""
     password: str
     role: str = "user"  # admin, editor, or user
+    tenant_id: Optional[int] = None  # Tenant the user belongs to
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -24,7 +25,8 @@ class UserCreate(UserBase):
                     "email": "john@example.com",
                     "full_name": "John Doe",
                     "password": "strongpassword123",
-                    "role": "user"
+                    "role": "user",
+                    "tenant_id": 1
                 }
             ]
         }
@@ -39,6 +41,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    tenant_id: Optional[int] = None
 
 
 class UserResponse(UserBase):
@@ -46,6 +49,7 @@ class UserResponse(UserBase):
     id: int
     role: str
     is_active: bool
+    tenant_id: Optional[int]
     created_at: datetime
     updated_at: datetime
 
@@ -60,5 +64,6 @@ class UserProfile(BaseModel):
     full_name: Optional[str]
     role: str
     is_active: bool
+    tenant_id: Optional[int]
 
     model_config = ConfigDict(from_attributes=True)

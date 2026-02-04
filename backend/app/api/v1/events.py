@@ -1,10 +1,11 @@
 """User event endpoints"""
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_current_tenant
 from app.models.user import User
+from app.models.tenant import Tenant
 from app.schemas.event import EventCreate, EventUpdate, EventResponse, UserEventStatsResponse
 from app.services import event_service
 
@@ -86,20 +87,25 @@ async def get_event(
 async def create_event(
     event: EventCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    current_tenant: Optional[Tenant] = Depends(get_current_tenant)
 ):
     """
     Create a new event (status: pending)
+    
+    The event will be automatically assigned to the user's tenant (Verband).
 
     Args:
         event: Event creation data
         db: Database session
         current_user: Current authenticated user
+        current_tenant: Current user's tenant (optional)
 
     Returns:
         EventResponse: Created event
     """
-    return event_service.create_event(db, event, current_user.id, current_user)
+    tenant_id = current_tenant.id if current_tenant else None
+    return event_service.create_event(db, event, current_user.id, current_user, tenant_id)
 
 
 @router.put("/{event_id}", response_model=EventResponse)

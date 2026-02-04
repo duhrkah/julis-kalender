@@ -1,6 +1,7 @@
 """Category business logic service"""
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from fastapi import HTTPException, status
 
 from app.models.category import Category
@@ -11,7 +12,9 @@ def get_categories(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    active_only: bool = False
+    active_only: bool = False,
+    tenant_ids: Optional[List[int]] = None,
+    include_global: bool = True
 ) -> List[Category]:
     """
     Get all categories
@@ -21,6 +24,8 @@ def get_categories(
         skip: Number of records to skip
         limit: Maximum number of records to return
         active_only: Filter for active categories only
+        tenant_ids: Filter by tenant IDs (multi-tenancy support)
+        include_global: Include global categories (visible to all tenants)
 
     Returns:
         List[Category]: List of categories
@@ -30,7 +35,24 @@ def get_categories(
     if active_only:
         query = query.filter(Category.is_active == True)
 
-    return query.offset(skip).limit(limit).all()
+    # Multi-tenancy filter
+    if tenant_ids is not None and len(tenant_ids) > 0:
+        conditions = [Category.tenant_id.in_(tenant_ids)]
+        if include_global:
+            # Include global categories and legacy categories without tenant
+            conditions.append(Category.is_global == True)
+            conditions.append(Category.tenant_id == None)
+        query = query.filter(or_(*conditions))
+    elif include_global:
+        # If no tenant specified but include_global is True, show global categories
+        query = query.filter(
+            or_(
+                Category.is_global == True,
+                Category.tenant_id == None
+            )
+        )
+
+    return query.order_by(Category.name).offset(skip).limit(limit).all()
 
 
 def get_category(db: Session, category_id: int) -> Optional[Category]:
@@ -47,24 +69,42 @@ def get_category(db: Session, category_id: int) -> Optional[Category]:
     return db.query(Category).filter(Category.id == category_id).first()
 
 
-def get_category_by_name(db: Session, name: str) -> Optional[Category]:
+def get_category_by_name(
+    db: Session, 
+    name: str, 
+    tenant_id: Optional[int] = None
+) -> Optional[Category]:
     """
     Get category by name (case-insensitive)
 
     Args:
         db: Database session
         name: Category name
+        tenant_id: Tenant ID to filter by (optional)
 
     Returns:
         Optional[Category]: Category if found, None otherwise
     """
-    return db.query(Category).filter(Category.name.ilike(name.strip())).first()
+    query = db.query(Category).filter(Category.name.ilike(name.strip()))
+    
+    if tenant_id is not None:
+        # Check tenant-specific first, then global
+        query = query.filter(
+            or_(
+                Category.tenant_id == tenant_id,
+                Category.is_global == True,
+                Category.tenant_id == None
+            )
+        )
+    
+    return query.first()
 
 
 def create_category(
     db: Session,
     category: CategoryCreate,
-    creator_id: int
+    creator_id: int,
+    tenant_id: Optional[int] = None
 ) -> Category:
     """
     Create a new category
@@ -73,15 +113,25 @@ def create_category(
         db: Database session
         category: Category creation data
         creator_id: ID of the user creating the category
+        tenant_id: Tenant ID for the category (optional, for tenant-specific categories)
 
     Returns:
         Category: Created category
 
     Raises:
-        HTTPException: If category name already exists
+        HTTPException: If category name already exists for the same tenant
     """
-    # Check if category name already exists
-    existing = db.query(Category).filter(Category.name == category.name).first()
+    # Check if category name already exists for this tenant
+    query = db.query(Category).filter(Category.name == category.name)
+    if tenant_id is not None:
+        query = query.filter(Category.tenant_id == tenant_id)
+    else:
+        # For global categories, check against all global/null tenant categories
+        query = query.filter(
+            or_(Category.tenant_id == None, Category.is_global == True)
+        )
+    
+    existing = query.first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -90,7 +140,8 @@ def create_category(
 
     db_category = Category(
         **category.model_dump(),
-        created_by=creator_id
+        created_by=creator_id,
+        tenant_id=tenant_id
     )
 
     db.add(db_category)

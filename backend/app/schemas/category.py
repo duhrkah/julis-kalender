@@ -13,7 +13,7 @@ class CategoryBase(BaseModel):
 
 class CategoryCreate(CategoryBase):
     """Schema for creating a new category"""
-    pass
+    is_global: bool = False  # Global categories are visible to all tenants
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -21,7 +21,8 @@ class CategoryCreate(CategoryBase):
                 {
                     "name": "Konferenz",
                     "color": "#3B82F6",
-                    "description": "Konferenzen und große Veranstaltungen"
+                    "description": "Konferenzen und große Veranstaltungen",
+                    "is_global": False
                 }
             ]
         }
@@ -34,12 +35,15 @@ class CategoryUpdate(BaseModel):
     color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     description: Optional[str] = None
     is_active: Optional[bool] = None
+    is_global: Optional[bool] = None
 
 
 class CategoryResponse(CategoryBase):
     """Schema for category response"""
     id: int
     is_active: bool
+    is_global: bool
+    tenant_id: Optional[int]
     created_at: datetime
     created_by: int
 
@@ -52,5 +56,7 @@ class CategoryPublic(BaseModel):
     name: str
     color: str
     description: Optional[str]
+    is_global: bool = False
+    tenant_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
