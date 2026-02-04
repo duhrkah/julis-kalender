@@ -47,53 +47,22 @@ def upgrade() -> None:
         columns = [c['name'] for c in inspector.get_columns('users')]
         if 'tenant_id' not in columns:
             op.add_column('users', sa.Column('tenant_id', sa.Integer(), nullable=True))
-            op.create_index('ix_users_tenant_id', 'users', ['tenant_id'])
-            op.create_foreign_key(
-                'fk_users_tenant_id',
-                'users', 'tenants',
-                ['tenant_id'], ['id'],
-                ondelete='CASCADE'
-            )
     
     # 3. Add tenant_id to events table
     if 'events' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('events')]
         if 'tenant_id' not in columns:
             op.add_column('events', sa.Column('tenant_id', sa.Integer(), nullable=True))
-            op.create_index('ix_events_tenant_id', 'events', ['tenant_id'])
-            op.create_foreign_key(
-                'fk_events_tenant_id',
-                'events', 'tenants',
-                ['tenant_id'], ['id'],
-                ondelete='CASCADE'
-            )
     
     # 4. Add tenant_id and is_global to categories table
     if 'categories' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('categories')]
         
-        # First, drop the old unique constraint on name
-        # Note: SQLite doesn't support dropping constraints, so we handle this carefully
         if 'tenant_id' not in columns:
-            # For SQLite, we need to use batch mode
-            with op.batch_alter_table('categories') as batch_op:
-                # Try to drop the unique constraint if it exists
-                try:
-                    batch_op.drop_constraint('uq_categories_name', type_='unique')
-                except Exception:
-                    pass  # Constraint might not exist or have different name
-                
-                batch_op.add_column(sa.Column('tenant_id', sa.Integer(), nullable=True))
-                batch_op.add_column(sa.Column('is_global', sa.Boolean(), nullable=False, server_default='0'))
-                batch_op.create_index('ix_categories_tenant_id', ['tenant_id'])
-                batch_op.create_foreign_key(
-                    'fk_categories_tenant_id',
-                    'tenants',
-                    ['tenant_id'], ['id'],
-                    ondelete='CASCADE'
-                )
-                # Create new unique constraint: name + tenant_id combination
-                batch_op.create_unique_constraint('uq_category_name_tenant', ['name', 'tenant_id'])
+            op.add_column('categories', sa.Column('tenant_id', sa.Integer(), nullable=True))
+        
+        if 'is_global' not in columns:
+            op.add_column('categories', sa.Column('is_global', sa.Boolean(), nullable=True, server_default='0'))
 
 
 def downgrade() -> None:
@@ -101,33 +70,24 @@ def downgrade() -> None:
     inspector = inspect(conn)
     existing_tables = inspector.get_table_names()
     
-    # 1. Remove tenant_id from categories
+    # 1. Remove tenant_id and is_global from categories
     if 'categories' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('categories')]
+        if 'is_global' in columns:
+            op.drop_column('categories', 'is_global')
         if 'tenant_id' in columns:
-            with op.batch_alter_table('categories') as batch_op:
-                batch_op.drop_constraint('uq_category_name_tenant', type_='unique')
-                batch_op.drop_constraint('fk_categories_tenant_id', type_='foreignkey')
-                batch_op.drop_index('ix_categories_tenant_id')
-                batch_op.drop_column('is_global')
-                batch_op.drop_column('tenant_id')
-                # Restore original unique constraint
-                batch_op.create_unique_constraint('uq_categories_name', ['name'])
+            op.drop_column('categories', 'tenant_id')
     
     # 2. Remove tenant_id from events
     if 'events' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('events')]
         if 'tenant_id' in columns:
-            op.drop_constraint('fk_events_tenant_id', 'events', type_='foreignkey')
-            op.drop_index('ix_events_tenant_id', 'events')
             op.drop_column('events', 'tenant_id')
     
     # 3. Remove tenant_id from users
     if 'users' in existing_tables:
         columns = [c['name'] for c in inspector.get_columns('users')]
         if 'tenant_id' in columns:
-            op.drop_constraint('fk_users_tenant_id', 'users', type_='foreignkey')
-            op.drop_index('ix_users_tenant_id', 'users')
             op.drop_column('users', 'tenant_id')
     
     # 4. Drop tenants table
