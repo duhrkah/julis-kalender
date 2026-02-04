@@ -34,7 +34,7 @@ LANDESVERBAENDE = [
     {"name": "JuLis Nordrhein-Westfalen", "full_name": "Junge Liberale Nordrhein-Westfalen", "slug": "nordrhein-westfalen", "short": "NW"},
     {"name": "JuLis Rheinland-Pfalz", "full_name": "Junge Liberale Rheinland-Pfalz", "slug": "rheinland-pfalz", "short": "RP"},
     {"name": "JuLis Saarland", "full_name": "Junge Liberale Saarland", "slug": "saarland", "short": "SL"},
-    {"name": "JuLia Sachsen", "full_name": "Junge Liberale Sachsen", "slug": "sachsen", "short": "SN"},
+    {"name": "JuLia Sachsen", "full_name": "Jungliberale Aktion Sachsen", "slug": "sachsen", "short": "SN"},
     {"name": "JuLis Sachsen-Anhalt", "full_name": "Junge Liberale Sachsen-Anhalt", "slug": "sachsen-anhalt", "short": "ST"},
     {"name": "JuLis Schleswig-Holstein", "full_name": "Junge Liberale Schleswig-Holstein", "slug": "schleswig-holstein", "short": "SH"},
     {"name": "JuLis Thüringen", "full_name": "Junge Liberale Thüringen", "slug": "thueringen", "short": "TH"},
