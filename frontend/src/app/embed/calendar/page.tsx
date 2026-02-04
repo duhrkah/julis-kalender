@@ -11,6 +11,8 @@
  * - theme: "light" oder "dark"
  * - toolbar: "0" um Kalender-Navigation zu verbergen
  * - event: Event-ID für Deep-Link (öffnet Modal beim Laden)
+ * - tenant: Verband-Slug für Mandantenfähigkeit (z.B. ?tenant=bayern)
+ * - tenant_id: Verband-ID für Mandantenfähigkeit (z.B. ?tenant_id=2)
  */
 'use client';
 
@@ -20,6 +22,7 @@ import { Event } from '@/types/event';
 import { Category } from '@/types/category';
 import * as eventApi from '@/lib/api/events';
 import * as categoryApi from '@/lib/api/categories';
+import { setTenantContext, clearTenantContext } from '@/lib/api/tenants';
 import FullCalendarWrapper from '@/components/calendar/FullCalendarWrapper';
 import EventModal from '@/components/calendar/EventModal';
 import { useTranslation } from '@/lib/i18n';
@@ -46,6 +49,23 @@ function EmbedCalendarContent() {
     const id = searchParams.get('event');
     return id ? parseInt(id, 10) : undefined;
   }, [searchParams]);
+
+  // Tenant (Verband) filter for multi-tenancy
+  const tenantSlug = useMemo(() => searchParams.get('tenant') || undefined, [searchParams]);
+  const tenantId = useMemo(() => {
+    const id = searchParams.get('tenant_id');
+    return id ? parseInt(id, 10) : undefined;
+  }, [searchParams]);
+
+  // Set tenant context for API calls
+  useEffect(() => {
+    if (tenantSlug) {
+      setTenantContext(tenantSlug);
+    } else {
+      clearTenantContext();
+    }
+    return () => clearTenantContext();
+  }, [tenantSlug]);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

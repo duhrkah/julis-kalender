@@ -28,6 +28,7 @@ export interface Event {
   rejection_reason?: string | null;
   approved_at?: string | null;
   approved_by?: number | null;
+  tenant_id?: number | null;  // Multi-tenancy: Verband the event belongs to
   is_public: boolean;
   created_at: string;
   updated_at: string;

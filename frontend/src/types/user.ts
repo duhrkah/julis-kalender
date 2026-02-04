@@ -11,6 +11,7 @@ export interface User {
   full_name?: string | null;
   role: UserRole;
   is_active: boolean;
+  tenant_id?: number | null;  // Multi-tenancy: Verband the user belongs to
   created_at?: string;
   updated_at?: string;
 }
@@ -21,6 +22,7 @@ export interface UserCreate {
   full_name?: string;
   password: string;
   role?: UserRole;
+  tenant_id?: number;  // Multi-tenancy: Verband the user should be assigned to
 }
 
 export interface UserUpdate {
@@ -30,4 +32,5 @@ export interface UserUpdate {
   password?: string;
   role?: UserRole;
   is_active?: boolean;
+  tenant_id?: number;  // Multi-tenancy: Verband the user should be assigned to
 }

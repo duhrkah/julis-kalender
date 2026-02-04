@@ -6,6 +6,7 @@
 export * from './event';
 export * from './category';
 export * from './user';
+export * from './tenant';
 export * from './api';
 
 // Generated types from OpenAPI (run `npm run generate-types` to update)

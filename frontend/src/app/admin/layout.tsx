@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
-import { Menu, X, LayoutDashboard, Calendar, Tag, Users, FileText, Home, LogOut } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Calendar, Tag, Users, FileText, Home, LogOut, Building2 } from 'lucide-react';
+import { TenantProvider } from '@/lib/hooks/useTenant';
+import { TenantSelector, TenantBadge } from '@/components/tenant/TenantSelector';
 
-export default function AdminLayout({
+function AdminLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -61,9 +63,14 @@ export default function AdminLayout({
                   Kategorien
                 </Link>
                 {isAdmin && (
-                  <Link href="/admin/users" className={navLinkClass}>
-                    Benutzer
-                  </Link>
+                  <>
+                    <Link href="/admin/users" className={navLinkClass}>
+                      Benutzer
+                    </Link>
+                    <Link href="/admin/tenants" className={navLinkClass}>
+                      Verbände
+                    </Link>
+                  </>
                 )}
                 <Link href="/admin/audit" className={navLinkClass}>
                   Audit-Logs
@@ -71,8 +78,9 @@ export default function AdminLayout({
               </nav>
             </div>
 
-            {/* Desktop: User + Actions */}
+            {/* Desktop: Tenant Selector + User + Actions */}
             <div className="hidden md:flex items-center gap-4">
+              <TenantSelector showAll={true} label="" className="text-sm" />
               <Link href="/dashboard" className={navLinkClass}>
                 Dashboard
               </Link>
@@ -132,14 +140,24 @@ export default function AdminLayout({
                 <span>Kategorien</span>
               </Link>
               {isAdmin && (
-                <Link
-                  href="/admin/users"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
-                >
-                  <Users size={18} />
-                  <span>Benutzer</span>
-                </Link>
+                <>
+                  <Link
+                    href="/admin/users"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <Users size={18} />
+                    <span>Benutzer</span>
+                  </Link>
+                  <Link
+                    href="/admin/tenants"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <Building2 size={18} />
+                    <span>Verbände</span>
+                  </Link>
+                </>
               )}
               <Link
                 href="/admin/audit"
@@ -177,5 +195,18 @@ export default function AdminLayout({
         {children}
       </main>
     </div>
+  );
+}
+
+// Wrap the layout with TenantProvider
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <TenantProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </TenantProvider>
   );
 }
