@@ -14,6 +14,7 @@ Eine vollständige Event-Management-Web-App mit Admin-Dashboard, Benutzer-Event-
 - ✅ **Kategorie-System**: Frei definierbare Event-Kategorien durch Admins
 - ✅ **Audit-Logging**: Protokollierung aller Admin-Aktionen
 - ✅ **Rollen-System**: Admin (voll), Editor (ohne Benutzerverwaltung), Benutzer
+- ✅ **Mandantenfähigkeit**: Multi-Tenancy für Verbandsstruktur (Bundesverband → Landesverband → Bezirksverband)
 
 ## Technologie-Stack
 
@@ -133,6 +134,81 @@ docker-compose exec backend python scripts/create_admin.py
 ```
 
 Folge den Anweisungen, um den ersten Admin-Account zu erstellen.
+
+## Mandantenfähigkeit (Multi-Tenancy)
+
+Das System unterstützt eine hierarchische Verbandsstruktur:
+
+```
+Bundesverband (sieht alle Events aggregiert)
+├── Landesverband Bayern (eigene Instanz)
+│   ├── Bezirksverband Oberbayern
+│   └── Bezirksverband Schwaben
+├── Landesverband Berlin (eigene Instanz)
+└── ... (16 Landesverbände)
+```
+
+### Verbände initialisieren
+
+Nach der Datenbank-Migration:
+
+```bash
+docker-compose exec backend python scripts/init_tenants.py
+```
+
+Dies erstellt:
+- 1 Bundesverband
+- 16 Landesverbände (alle deutschen Bundesländer)
+
+### Verband-Filter in URLs
+
+Der Kalender kann für einen bestimmten Verband gefiltert werden:
+
+```html
+<!-- Kalender nur für Bayern -->
+<iframe 
+  src="https://kalender.example.com/embed/calendar?tenant=bayern" 
+  width="100%" 
+  height="600"
+></iframe>
+
+<!-- Oder per tenant_id -->
+<iframe 
+  src="https://kalender.example.com/embed/calendar?tenant_id=2" 
+  width="100%" 
+  height="600"
+></iframe>
+```
+
+### API mit Tenant-Kontext
+
+Für API-Aufrufe kann der Tenant-Kontext über Header oder Query-Parameter gesetzt werden:
+
+```bash
+# Über Header
+curl -H "X-Tenant-Slug: bayern" https://kalender.example.com/api/v1/public/events
+
+# Über Query-Parameter
+curl "https://kalender.example.com/api/v1/public/events?tenant_id=2"
+```
+
+### Sichtbarkeitsregeln
+
+| Rolle | Sichtbarkeit |
+|-------|--------------|
+| Bundesverband-Admin | Alle Events aus allen Verbänden |
+| Landesverband-Admin | Eigene Events + Bezirksverbände |
+| Bezirksverband-Admin | Nur eigene Events |
+| Öffentlich (ohne Filter) | Alle genehmigten Events |
+| Öffentlich (mit Filter) | Genehmigte Events des Verbands |
+
+### Admin-Verwaltung
+
+Unter `/admin/tenants` (nur für Bundesverband-Admins) können Verbände verwaltet werden:
+- Neue Verbände anlegen
+- Hierarchie definieren
+- Primärfarbe und Logo setzen
+- Verbände aktivieren/deaktivieren
 
 ## API-Dokumentation
 
@@ -393,8 +469,9 @@ docker-compose restart backend
 
 ### Öffentlich (keine Auth)
 
-- `GET /api/v1/public/events` - Genehmigte Events
+- `GET /api/v1/public/events` - Genehmigte Events (mit optionalem `tenant_id` oder `X-Tenant-Slug` Header)
 - `GET /api/v1/public/categories` - Aktive Kategorien
+- `GET /api/v1/public/tenants` - Liste aller Verbände
 - `GET /api/v1/public/ical` - iCal-Export
 
 ### Authentifizierung
@@ -412,13 +489,23 @@ docker-compose restart backend
 
 ### Admin (Admin- und Editor-Rolle)
 
-- `GET /api/v1/admin/stats` - Dashboard-Statistiken
-- `GET /api/v1/admin/events` - Alle Events
+- `GET /api/v1/admin/stats` - Dashboard-Statistiken (mit optionalem `tenant_id` Filter)
+- `GET /api/v1/admin/events` - Alle Events (mit Tenant-Filterung basierend auf Benutzerrolle)
 - `PUT /api/v1/admin/events/{id}/approve` - Genehmigen
 - `PUT /api/v1/admin/events/{id}/reject` - Ablehnen
 - `GET /api/v1/admin/users` - Benutzer verwalten (nur Admin)
 - `GET /api/v1/admin/categories` - Kategorien verwalten
 - `GET /api/v1/admin/audit-logs` - Audit-Logs
+
+### Tenant-Verwaltung (nur Admin)
+
+- `GET /api/v1/tenants` - Alle Verbände
+- `GET /api/v1/tenants/{id}` - Verband-Details
+- `POST /api/v1/tenants` - Neuen Verband anlegen
+- `PUT /api/v1/tenants/{id}` - Verband bearbeiten
+- `DELETE /api/v1/tenants/{id}` - Verband löschen
+- `GET /api/v1/tenants/{id}/stats` - Statistiken für Verband
+- `GET /api/v1/tenants/{id}/aggregated-stats` - Aggregierte Statistiken (Verband + Kinder)
 
 Vollständige API-Dokumentation: http://localhost:8000/docs
 
